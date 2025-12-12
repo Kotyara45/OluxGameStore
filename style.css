@@ -1,7 +1,7 @@
 :root {
-    --green-dark: #38a169;
-    --green-light: #a8e578;
-    --background-color: #f7f7f7;
+    --green-start: #38a169;
+    --turquoise-end: #40e0d0;
+    --card-light: #a8e578;
     --text-color: #333;
 }
 
@@ -9,12 +9,12 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: var(--background-color);
     color: var(--text-color);
+    background: linear-gradient(to bottom right, var(--green-start), var(--turquoise-end));
 }
 
 header {
-    background-color: var(--green-dark);
+    background-color: rgba(56, 161, 105, 0.8);
     color: white;
     padding: 15px 20px;
     text-align: center;
@@ -39,7 +39,6 @@ nav a.active {
 }
 
 .catalog {
-    background-color: var(--green-dark);
     padding: 20px;
     display: flex;
     justify-content: center;
@@ -48,7 +47,7 @@ nav a.active {
 }
 
 .game-card {
-    background-color: var(--green-light);
+    background-color: var(--card-light);
     width: 200px;
     height: 400px;
     box-sizing: border-box;
@@ -97,7 +96,7 @@ nav a.active {
     justify-content: flex-end;
     transform: translateY(100%); 
     transition: transform 0.4s ease; 
-    background-color: var(--green-light);
+    background-color: var(--card-light);
 }
 
 .back-content p {
@@ -111,7 +110,7 @@ nav a.active {
 }
 
 .buy-btn {
-    background-color: #38a169;
+    background-color: var(--green-start);
     color: white;
     border: none;
     padding: 8px 0;
@@ -126,6 +125,23 @@ nav a.active {
 
 .game-card:hover .back-content {
     transform: translateY(0);
+}
+
+.gta-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    text-align: center;
+}
+
+.gta6-cover {
+    width: 300px;
+    height: auto;
+    border-radius: 8px;
+    margin: 20px 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .gta-launch-btn {
@@ -143,4 +159,30 @@ nav a.active {
 .gta-launch-btn:hover {
     background-color: #c0392b;
     transform: translateY(-2px);
+}
+
+.prank-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    color: white;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 3em;
+    font-weight: bold;
+    z-index: 100;
+}
+
+.prank-overlay.active {
+    display: flex;
+}
+
+.prank-overlay video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
