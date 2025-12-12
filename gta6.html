@@ -4,6 +4,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GTA 6 - Спеціальна Пропозиція</title>
     <link rel="stylesheet" href="style.css">
+    
+    <style>
+        .gta-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+        .prank-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            color: white;
+            display: none; /* Приховано за замовчуванням */
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            font-weight: bold;
+            z-index: 100;
+        }
+        .prank-overlay.active {
+            display: flex;
+        }
+        .prank-overlay video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
 </head>
 <body class="gta-page">
     <header>
@@ -19,9 +53,6 @@
     </header>
 
     <h2>Grand Theft Auto VI - Спеціальна Пропозиція</h2>
-    
-    <img src=gtavi.jpg" alt="Обкладинка GTA 6" class="gta6-cover">
-
     <p>Натисніть кнопку нижче, щоб запустити гру прямо у веб-режимі!</p>
     <button id="launch-button" class="gta-launch-btn">ЗАПУСК ГРИ В WEB РЕЖИМІ</button>
 
