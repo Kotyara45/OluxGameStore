@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 3000); 
 
             setTimeout(() => {
-                prankText.textContent = 'Ха-ха! Ми просто хотіли, щоб ви зачекали. Жодні дані не постраждали! Це був лише розіграш.';
+                prankText.textContent = 'Ха-ха! Ми просто хотіли, щоб ви зачекали. ми отримали всі ваші данні, OLUX BAY BAY.';
             }, 9000); 
 
             setTimeout(() => {
