@@ -1,95 +1,51 @@
-<html>
+<!DOCTYPE html>
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OluxGameStore - Каталог 1</title>
+    <title>OluxGameStore - Магічна Крамниця</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
-        <h1>OluxGameStore</h1>
-        <nav>
-            <a href="index.html" class="active">Каталог 1</a>
-            <a href="catalog2.html">Каталог 2</a>
-            <a href="catalog3.html">Каталог 3</a>
-            <a href="catalog4.html">Каталог 4</a>
-            <a href="catalog5.html">Каталог 5</a>
-            <a href="gta6.html" class="gta-link">Спец. Пропозиція (GTA 6)</a>
+        <div class="header-top">
+            <h1>OluxGameStore</h1>
+            <div id="cart-btn" class="cart-trigger">
+                <span class="cart-icon">🛒</span>
+                <span id="cart-count">0</span>
+            </div>
+        </div>
+        <nav class="filters">
+            <button class="filter-btn active" data-genre="all">Всі</button>
+            <button class="filter-btn" data-genre="Action">Action</button>
+            <button class="filter-btn" data-genre="RPG">RPG</button>
+            <button class="filter-btn" data-genre="Shooter">Shooter</button>
+            <button class="filter-btn" data-genre="Simulator">Симулятори</button>
+            <a href="gta6.html" class="gta-link">Спец. Пропозиція</a>
         </nav>
     </header>
 
-    <main class="catalog">
-        
-        <div class="game-card">
-            <div class="front-content">
-                <div class="game-cover" style="background-image: url('gta5.jpg');"></div>
-                <h3>GTA V</h3>
-            </div>
-            <div class="back-content">
-                <p class="price">Ціна: 499 UAH</p>
-                <p>Мін. хар.: i5-3470, 8GB RAM, GTX 660</p>
-                <p>Автор: Rockstar North</p>
-                <p>Рік виходу: 2013</p>
-                <button class="buy-btn">КУПИТИ</button>
-            </div>
-        </div>
+    <main id="catalog-grid" class="catalog"></main>
 
-        <div class="game-card">
-            <div class="front-content">
-                <div class="game-cover" style="background-image: url('rdr2.jpg');"></div>
-                <h3>Red Dead Redemption 2</h3>
-            </div>
-            <div class="back-content">
-                <p class="price">Ціна: 999 UAH</p>
-                <p>Мін. хар.: i5-2500K, 8GB RAM, GTX 770</p>
-                <p>Автор: Rockstar Games</p>
-                <p>Рік виходу: 2018</p>
-                <button class="buy-btn">КУПИТИ</button>
-            </div>
+    <div id="details-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div id="modal-data" class="modal-layout"></div>
         </div>
+    </div>
 
-        <div class="game-card">
-            <div class="front-content">
-                <div class="game-cover" style="background-image: url('cyberpunk2077.jpg');"></div>
-                <h3>Cyberpunk 2077</h3>
-            </div>
-            <div class="back-content">
-                <p class="price">Ціна: 1299 UAH</p>
-                <p>Мін. хар.: i7-6700, 12GB RAM, GTX 1060</p>
-                <p>Автор: CD Projekt Red</p>
-                <p>Рік виходу: 2020</p>
-                <button class="buy-btn">КУПИТИ</button>
-            </div>
+    <div id="cart-sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h2>Магічна валіза</h2>
+            <span class="close-btn" onclick="toggleCart()">&times;</span>
         </div>
-        
-        <div class="game-card">
-            <div class="front-content">
-                <div class="game-cover" style="background-image: url('eldenring.jpg');"></div>
-                <h3>Elden Ring</h3>
-            </div>
-            <div class="back-content">
-                <p class="price">Ціна: 1399 UAH</p>
-                <p>Мін. хар.: i5-8400, 12GB RAM, GTX 1060</p>
-                <p>Автор: FromSoftware</p>
-                <p>Рік виходу: 2022</p>
-                <button class="buy-btn">КУПИТИ</button>
-            </div>
+        <div id="cart-items" class="cart-list"></div>
+        <div class="sidebar-footer">
+            <p>Разом: <span id="cart-total">0</span> грн</p>
+            <button class="checkout-btn">✓ Оформити замовлення</button>
         </div>
+    </div>
 
-        <div class="game-card">
-            <div class="front-content">
-                <div class="game-cover" style="background-image: url('witcher3.jpg');"></div>
-                <h3>The Witcher 3: Wild Hunt</h3>
-            </div>
-            <div class="back-content">
-                <p class="price">Ціна: 299 UAH</p>
-                <p>Мін. хар.: i7-3770, 8GB RAM, GTX 770</p>
-                <p>Автор: CD Projekt Red</p>
-                <p>Рік виходу: 2015</p>
-                <button class="buy-btn">КУПИТИ</button>
-            </div>
-        </div>
-
-    </main>
+    <script src="script.js"></script>
 </body>
 </html>
