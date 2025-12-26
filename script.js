@@ -1,29 +1,39 @@
 let cart = [];
 const overlay = document.getElementById('overlay');
 
+window.onload = () => {
+    const banner = document.getElementById('joke-banner');
+    if (banner) {
+        setTimeout(() => {
+            banner.classList.add('hidden');
+        }, 5000);
+    }
+};
+
 function openDetails(btn) {
     const d = btn.closest('.game-card').dataset;
     const modal = document.getElementById('details-modal');
+    const modalData = document.getElementById('modal-data');
     
-    document.getElementById('modal-data').innerHTML = `
+    modalData.innerHTML = `
         <div class="modal-img-side">
             <img src="${d.img}" alt="${d.title}">
         </div>
         <div class="modal-info-side">
+            <span class="close-btn-large" onclick="closeModal()">&times;</span>
             <h2>${d.title}</h2>
             <div class="modal-price">${d.price} грн</div>
-            <p style="color: #666; line-height: 1.6;">${d.desc}</p>
+            <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">${d.desc}</p>
             <ul class="modal-specs">
-                <li>Видавець: ${d.author}</li>
-                <li>Дата релізу: ${d.year}</li>
-                <li>Системні вимоги: ${d.specs}</li>
-                <li>Ліцензійна активація</li>
+                <li><strong>Видавець:</strong> ${d.author}</li>
+                <li><strong>Рік випуску:</strong> ${d.year}</li>
+                <li><strong>Мін. вимоги:</strong> ${d.specs}</li>
             </ul>
             <button class="modal-buy-btn" onclick="addToCartDirect('${d.title}', ${d.price}, '${d.img}')">
-                Додати до кошика
+                Додати у кошик
             </button>
-        </div>
-    `;
+        </div>`;
+    
     modal.classList.add('active');
     overlay.classList.add('active');
 }
@@ -36,28 +46,36 @@ function addToCartDirect(title, price, img) {
 
 function addToCart(btn) {
     const d = btn.closest('.game-card').dataset;
-    addToCartDirect(d.title, d.price, d.img);
+    cart.push({ 
+        title: d.title, 
+        price: parseInt(d.price) || 0, 
+        img: d.img 
+    });
+    updateUI();
 }
 
 function updateUI() {
-    document.getElementById('cart-count').innerText = cart.length;
-    const list = document.getElementById('cart-items');
-    let total = 0;
+    const cartCount = document.getElementById('cart-count');
+    const cartItems = document.getElementById('cart-items');
+    const cartTotal = document.getElementById('cart-total');
     
-    list.innerHTML = cart.map((item, i) => {
+    cartCount.innerText = cart.length;
+    
+    let total = 0;
+    cartItems.innerHTML = cart.map((item, i) => {
         total += item.price;
         return `
             <div class="cart-item">
-                <img src="${item.img}">
-                <div>
-                    <div style="font-weight:bold;">${item.title}</div>
-                    <div style="color:var(--gold); font-weight:bold;">${item.price} грн</div>
+                <img src="${item.img}" alt="${item.title}">
+                <div style="flex: 1;">
+                    <div style="font-weight: bold; font-size: 14px;">${item.title}</div>
+                    <div style="color: #d4af37; font-weight: bold;">${item.price} грн</div>
                 </div>
-                <span style="position:absolute; right:15px; cursor:pointer;" onclick="removeFromCart(${i})">✕</span>
+                <span style="cursor: pointer; color: #ff4444; font-weight: bold;" onclick="removeFromCart(${i})">✕</span>
             </div>`;
     }).join('');
     
-    document.getElementById('cart-total').innerText = total;
+    cartTotal.innerText = total;
 }
 
 function removeFromCart(index) {
@@ -65,42 +83,49 @@ function removeFromCart(index) {
     updateUI();
 }
 
-function closeModal() { 
-    document.getElementById('details-modal').classList.remove('active'); 
+function checkout() {
+    if (cart.length === 0) {
+        alert("Ваш кошик порожній!");
+        return;
+    }
+    window.location.href = 'https://donatello.to/OluxGameStore';
+}
+
+function closeModal() {
+    document.getElementById('details-modal').classList.remove('active');
     if (!document.getElementById('cart-sidebar').classList.contains('active')) {
         overlay.classList.remove('active');
     }
 }
 
-function toggleCart() { 
+function toggleCart() {
     const sidebar = document.getElementById('cart-sidebar');
     sidebar.classList.toggle('active');
     overlay.classList.toggle('active', sidebar.classList.contains('active'));
 }
 
-function clearCart() { 
-    if (cart.length === 0) return;
-    alert("Замовлення прийнято! Менеджер зв'яжеться з вами."); 
-    cart = []; 
-    updateUI(); 
-    toggleCart(); 
-}
-
 overlay.onclick = () => {
-    closeModal();
+    document.getElementById('details-modal').classList.remove('active');
     document.getElementById('cart-sidebar').classList.remove('active');
     overlay.classList.remove('active');
 };
-
-document.getElementById('cart-btn').onclick = toggleCart;
 
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.onclick = () => {
         document.querySelector('.filter-btn.active').classList.remove('active');
         btn.classList.add('active');
-        const g = btn.dataset.genre;
-        document.querySelectorAll('.game-card').forEach(c => {
-            c.style.display = (g === 'all' || c.dataset.genre === g) ? 'block' : 'none';
+        
+        const genre = btn.dataset.genre;
+        const cards = document.querySelectorAll('.game-card');
+        
+        cards.forEach(card => {
+            if (genre === 'all' || card.dataset.genre === genre) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
         });
     };
 });
+
+document.getElementById('cart-btn').onclick = toggleCart;
