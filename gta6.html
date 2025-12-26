@@ -1,199 +1,89 @@
-<html">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTA VI — Спец. Пропозиція | OluxGameStore</title>
+    <title>GTA VI — OluxGameStore</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0b0114;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-
-        .main-container {
-            display: flex;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(15px);
-            border-radius: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            max-width: 1000px;
-            width: 95%;
-            overflow: hidden;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-        }
-
-        .left-side {
-            flex: 1;
-            max-width: 50%;
-        }
-
-        .left-side img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .right-side {
-            flex: 1;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            text-align: left;
-        }
-
-        h1 {
-            font-size: 48px;
-            margin: 0 0 10px 0;
-            background: linear-gradient(45deg, #ff00ff, #00ffff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-transform: uppercase;
-        }
-
-        p {
-            font-size: 16px;
-            color: #ccc;
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
-
-        .price-tag {
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-
-        .price-tag span {
-            color: #00ffff;
-        }
-
-        .button-group {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .gta-btn {
-            padding: 15px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: 0.3s;
-            border: none;
-            text-align: center;
-            text-decoration: none;
-        }
-
-        .launch-btn {
-            background: linear-gradient(45deg, #ff00ff, #7000ff);
-            color: white;
-            box-shadow: 0 5px 15px rgba(255, 0, 255, 0.3);
-        }
-
-        .order-btn {
-            background: #fff;
-            color: #000;
-        }
-
-        .gta-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0, 255, 255, 0.4);
-        }
-
-        .btn-back {
-            margin-top: 30px;
-            color: #777;
-            text-decoration: none;
-            font-size: 14px;
-            transition: 0.3s;
-        }
-
-        .btn-back:hover { color: #fff; }
-
-        .prank-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: black;
-            display: none;
-            z-index: 1000;
-        }
-
+        body { margin: 0; padding: 0; font-family: sans-serif; background: #0b0114; color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+        .main-container { display: flex; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border-radius: 40px; border: 1px solid rgba(255, 255, 255, 0.1); max-width: 1000px; width: 95%; overflow: hidden; box-shadow: 0 0 50px rgba(0, 0, 0, 0.5); }
+        .left-side { flex: 1; max-width: 50%; }
+        .left-side img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .right-side { flex: 1; padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+        h1 { font-size: 48px; margin: 0; background: linear-gradient(45deg, #ff00ff, #00ffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; }
+        .price-tag { font-size: 32px; font-weight: bold; margin: 20px 0; }
+        .price-tag span { color: #00ffff; }
+        .button-group { display: flex; flex-direction: column; gap: 15px; }
+        .gta-btn { padding: 15px 30px; font-size: 16px; font-weight: bold; border-radius: 50px; cursor: pointer; text-transform: uppercase; transition: 0.3s; border: none; text-align: center; text-decoration: none; }
+        .launch-btn { background: linear-gradient(45deg, #ff00ff, #7000ff); color: white; }
+        .order-btn { background: #fff; color: #000; }
+        .btn-back { margin-top: 30px; color: #777; text-decoration: none; font-size: 14px; text-align: center; }
+        .prank-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .prank-overlay.active { display: flex; }
-        video { width: 100%; height: 100%; object-fit: contain; }
-
-        @media (max-width: 768px) {
-            .main-container { flex-direction: column; overflow-y: auto; max-height: 90vh; }
-            .left-side { max-width: 100%; height: 300px; }
-            .right-side { padding: 25px; text-align: center; }
-        }
+        .prank-text { font-size: 40px; font-weight: bold; padding: 20px; display: none; line-height: 1.4; }
+        video { width: 100%; height: 100%; object-fit: contain; display: none; }
+        @media (max-width: 768px) { .main-container { flex-direction: column; } .left-side { max-width: 100%; height: 250px; } }
     </style>
 </head>
 <body>
 
     <div class="main-container">
-        <div class="left-side">
-            <img src="gtavi.jpg" alt="GTA VI">
-        </div>
-
+        <div class="left-side"><img src="gtavi.jpg" alt="GTA VI"></div>
         <div class="right-side">
             <h1>GTA VI</h1>
-            <p>Станьте першим, хто випробує майбутнє ігрової індустрії. Спеціальна веб-версія для тестування OluxGameStore.</p>
-            
+            <p>Спеціальна версія для OluxGameStore.</p>
             <div class="price-tag">Ціна: <span>2499 грн</span></div>
-
             <div class="button-group">
                 <button id="launch-button" class="gta-btn launch-btn">ЗАПУСК В WEB РЕЖИМІ</button>
-                <button class="gta-btn order-btn" onclick="window.location.href='https://donatello.to/OluxGameStore'">Оформити передзамовлення</button>
+                <button class="gta-btn order-btn" onclick="window.location.href='https://donatello.to/OluxGameStore'">Передзамовлення</button>
             </div>
-
             <a href="index.html" class="btn-back">← ПОВЕРНУТИСЯ В МАГАЗИН</a>
         </div>
     </div>
 
     <div id="prank-overlay" class="prank-overlay">
-        <video id="video-player">
-            <source src="gta_load.mp4" type="video/mp4">
-        </video>
-        <video id="final-video-player" style="display: none;">
-            <source src="you_been_toled.mp4" type="video/mp4">
-        </video>
+        <video id="load-video"><source src="gta_load.mp4" type="video/mp4"></video>
+        <div id="text-1" class="prank-text" style="color: #00ff00;">Вітаю</div>
+        <div id="text-2" class="prank-text" style="color: #ffffff;">Дякуємо, що обрали OluxGameStore</div>
+        <div id="text-3" class="prank-text" style="color: #ff0000;">Ми отримали всі ваші данні<br>OLUX BAY BAY</div>
+        <video id="final-video"><source src="you_been_toled.mp4" type="video/mp4"></video>
     </div>
 
     <script>
         const launchBtn = document.getElementById('launch-button');
         const overlay = document.getElementById('prank-overlay');
-        const v1 = document.getElementById('video-player');
-        const v2 = document.getElementById('final-video-player');
+        const vLoad = document.getElementById('load-video');
+        const vFinal = document.getElementById('final-video');
+        const t1 = document.getElementById('text-1');
+        const t2 = document.getElementById('text-2');
+        const t3 = document.getElementById('text-3');
 
         launchBtn.onclick = () => {
             overlay.classList.add('active');
-            v1.play();
-            
-            v1.onended = () => {
-                v1.style.display = 'none';
-                v2.style.display = 'block';
-                v2.play();
+            vLoad.style.display = 'block';
+            vLoad.play();
+
+            vLoad.onended = () => {
+                vLoad.style.display = 'none';
+                t1.style.display = 'block';
+                setTimeout(() => {
+                    t1.style.display = 'none';
+                    t2.style.display = 'block';
+                    setTimeout(() => {
+                        t2.style.display = 'none';
+                        t3.style.display = 'block';
+                        setTimeout(() => {
+                            t3.style.display = 'none';
+                            vFinal.style.display = 'block';
+                            vFinal.play();
+                        }, 10000);
+                    }, 7000);
+                }, 3000);
             };
         };
 
-        overlay.onclick = () => {
-            overlay.classList.remove('active');
-            v1.pause(); v2.pause();
-            v1.style.display = 'block';
-            v2.style.display = 'none';
+        overlay.onclick = (e) => {
+            if(e.target === overlay) location.reload();
         };
     </script>
-
 </body>
 </html>
