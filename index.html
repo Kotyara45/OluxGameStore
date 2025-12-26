@@ -6,12 +6,16 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="joke-banner" class="joke-banner">УВАГА! Це шуточний сайт. Всі ігри безкоштовні (в паралельному всесвіті)!</div>
     <div id="overlay" class="overlay"></div>
 
     <header>
         <div class="header-top">
             <h1>OluxGameStore</h1>
-            <a href="gta6.html" class="special-link">🔥 GTA VI: Спецпропозиція</a>
+            <a href="gta6.html" class="gta6-nav-btn">
+                <span>GTA VI</span>
+                <small>PRE-ORDER NOW</small>
+            </a>
             <div id="cart-btn" class="cart-trigger">
                 <span class="cart-icon">🛒</span>
                 <span id="cart-count">0</span>
@@ -27,133 +31,99 @@
     </header>
 
     <main id="catalog-grid" class="catalog">
-        <div class="game-card" data-genre="Action" data-title="GTA V" data-price="499" data-author="Rockstar Games" data-year="2013" data-specs="i5-3470, 8GB RAM, GTX 660" data-img="gta5.jpg" data-desc="Легендарний відкритий світ, де ви самі обираєте свій шлях у кримінальному Лос-Сантосі.">
+        <div class="game-card" data-genre="Action" data-title="GTA V" data-price="499" data-author="Rockstar Games" data-year="2013" data-specs="i5-3470, 8GB RAM, GTX 660" data-img="gta5.jpg" data-desc="Легендарний відкритий світ злочинного Лос-Сантоса.">
             <div class="card-img" style="background-image: url('gta5.jpg')"></div>
             <h3>GTA V</h3><p class="price">499 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="RPG" data-title="Red Dead Redemption 2" data-price="899" data-author="Rockstar Games" data-year="2018" data-specs="i5-2500K, 8GB RAM, GTX 770" data-img="rdr2.jpg" data-desc="Епічна історія про бандитів на Дикому Заході з неймовірною деталізацією.">
+        <div class="game-card" data-genre="RPG" data-title="Red Dead Redemption 2" data-price="899" data-author="Rockstar Games" data-year="2018" data-specs="i5-2500K, 8GB RAM, GTX 770" data-img="rdr2.jpg" data-desc="Епічна історія про бандитів на Дикому Заході.">
             <div class="card-img" style="background-image: url('rdr2.jpg')"></div>
             <h3>RDR 2</h3><p class="price">899 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="RPG" data-title="Cyberpunk 2077" data-price="1099" data-author="CD Projekt Red" data-year="2020" data-specs="i7-6700, 12GB RAM, GTX 1060" data-img="cyberpunk2077.jpg" data-desc="Пориньте у похмуре майбутнє Найт-Сіті в ролі найманця V.">
+        <div class="game-card" data-genre="RPG" data-title="Cyberpunk 2077" data-price="1099" data-author="CD Projekt Red" data-year="2020" data-specs="i7-6700, 12GB RAM, GTX 1060" data-img="cyberpunk2077.jpg" data-desc="Майбутнє Найт-Сіті чекає на тебе.">
             <div class="card-img" style="background-image: url('cyberpunk2077.jpg')"></div>
             <h3>Cyberpunk 2077</h3><p class="price">1099 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="RPG" data-title="Elden Ring" data-price="1399" data-author="FromSoftware" data-year="2022" data-specs="i5-8400, 12GB RAM, GTX 1060" data-img="eldenring.jpg" data-desc="Досліджуйте Міжзем'я та станьте Лордом Елдена у новій грі від Хідетаки Міядзакі.">
+        <div class="game-card" data-genre="RPG" data-title="Elden Ring" data-price="1399" data-author="FromSoftware" data-year="2022" data-specs="i5-8400, 12GB RAM, GTX 1060" data-img="eldenring.jpg" data-desc="Досліджуйте Міжзем'я та станьте Лордом.">
             <div class="card-img" style="background-image: url('eldenring.jpg')"></div>
             <h3>Elden Ring</h3><p class="price">1399 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="RPG" data-title="The Witcher 3" data-price="399" data-author="CD Projekt Red" data-year="2015" data-specs="i7-3770, 8GB RAM, GTX 770" data-img="witcher3.jpg" data-desc="Фінал саги про відьмака Геральта у величезному та живому фентезійному світі.">
+        <div class="game-card" data-genre="RPG" data-title="The Witcher 3" data-price="399" data-author="CD Projekt Red" data-year="2015" data-specs="i7-3770, 8GB RAM, GTX 770" data-img="witcher3.jpg" data-desc="Легендарні пригоди Геральта з Рівії.">
             <div class="card-img" style="background-image: url('witcher3.jpg')"></div>
             <h3>Witcher 3</h3><p class="price">399 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-
-        <div class="game-card" data-genre="RPG" data-title="Baldur’s Gate 3" data-price="1299" data-author="Larian Studios" data-year="2023" data-specs="i7-8700K, 16GB RAM, RTX 2060" data-img="baldurs3.jpg" data-desc="Зберіть групу та вирушайте у подорож світом Forgotten Realms.">
+        <div class="game-card" data-genre="RPG" data-title="Baldur’s Gate 3" data-price="1299" data-author="Larian Studios" data-year="2023" data-specs="i7-8700K, 16GB RAM, RTX 2060" data-img="baldurs3.jpg" data-desc="Найкраща RPG останніх років.">
             <div class="card-img" style="background-image: url('baldurs3.jpg')"></div>
             <h3>Baldur’s Gate 3</h3><p class="price">1299 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="RPG" data-title="Hogwarts Legacy" data-price="1199" data-author="Warner Bros" data-year="2023" data-specs="i5-8400, 16GB RAM, GTX 1070" data-img="hogwarts.jpg" data-desc="Ваша власна історія у школі магії та чаклунства Гоґвортс 1800-х років.">
+        <div class="game-card" data-genre="RPG" data-title="Hogwarts Legacy" data-price="1199" data-author="Warner Bros" data-year="2023" data-specs="i5-8400, 16GB RAM, GTX 1070" data-img="hogwarts.jpg" data-desc="Станьте учнем Гоґвортсу.">
             <div class="card-img" style="background-image: url('hogwarts.jpg')"></div>
             <h3>Hogwarts Legacy</h3><p class="price">1199 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="RPG" data-title="Starfield" data-price="1499" data-author="Bethesda" data-year="2023" data-specs="i5-10600K, 16GB RAM, RTX 2080" data-img="starfield.jpg" data-desc="Досліджуйте космос та понад 1000 планет у першому за 25 років новому всесвіті від Bethesda.">
+        <div class="game-card" data-genre="RPG" data-title="Starfield" data-price="1499" data-author="Bethesda" data-year="2023" data-specs="i5-10600K, 16GB RAM, RTX 2080" data-img="starfield.jpg" data-desc="Досліджуйте космос.">
             <div class="card-img" style="background-image: url('starfield.jpg')"></div>
             <h3>Starfield</h3><p class="price">1499 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Simulator" data-title="Forza Horizon 5" data-price="999" data-author="Playground Games" data-year="2021" data-specs="i5-4460, 8GB RAM, GTX 970" data-img="forza5.jpg" data-desc="Неймовірні краєвиди Мексики та сотні кращих автомобілів світу чекають на вас.">
+        <div class="game-card" data-genre="Simulator" data-title="Forza Horizon 5" data-price="999" data-author="Playground Games" data-year="2021" data-specs="i5-4460, 8GB RAM, GTX 970" data-img="forza5.jpg" data-desc="Гонки по Мексиці.">
             <div class="card-img" style="background-image: url('forza5.jpg')"></div>
             <h3>Forza Horizon 5</h3><p class="price">999 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Action" data-title="AC Mirage" data-price="1299" data-author="Ubisoft" data-year="2023" data-specs="i7-8700K, 16GB RAM, RTX 2060" data-img="acmirage.jpg" data-desc="Дізнайтеся історію Басіма в золотий вік Багдада.">
+        <div class="game-card" data-genre="Action" data-title="AC Mirage" data-price="1299" data-author="Ubisoft" data-year="2023" data-specs="i7-8700K, 16GB RAM, RTX 2060" data-img="acmirage.jpg" data-desc="Багдадські пригоди ассасина.">
             <div class="card-img" style="background-image: url('acmirage.jpg')"></div>
             <h3>AC Mirage</h3><p class="price">1299 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-
-        <div class="game-card" data-genre="Action" data-title="Spider-Man Remastered" data-price="899" data-author="Insomniac" data-year="2022" data-specs="i7-3770, 16GB RAM, RTX 2060" data-img="spiderman.jpg" data-desc="Станьте справжнім супергероєм у Нью-Йорку з новими механіками польотів.">
+        <div class="game-card" data-genre="Action" data-title="Spider-Man Remastered" data-price="899" data-author="Insomniac" data-year="2022" data-specs="i7-3770, 16GB RAM, RTX 2060" data-img="spiderman.jpg" data-desc="Захистіть Нью-Йорк.">
             <div class="card-img" style="background-image: url('spiderman.jpg')"></div>
             <h3>Spider-Man</h3><p class="price">899 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Action" data-title="God of War" data-price="799" data-author="Santa Monica" data-year="2022" data-specs="i5-2500K, 8GB RAM, GTX 960" data-img="gow.jpg" data-desc="Кратос повертається в ролі батька в суворому світі скандинавських богів.">
+        <div class="game-card" data-genre="Action" data-title="God of War" data-price="799" data-author="Santa Monica" data-year="2022" data-specs="i5-2500K, 8GB RAM, GTX 960" data-img="gow.jpg" data-desc="Батько та син у світі богів.">
             <div class="card-img" style="background-image: url('gow.jpg')"></div>
             <h3>God of War</h3><p class="price">799 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Shooter" data-title="Battlefield 2042" data-price="599" data-author="DICE" data-year="2021" data-specs="i5-6600K, 8GB RAM, GTX 1050 Ti" data-img="bf2042.jpg" data-desc="Масштабні битви на 128 гравців у світі недалекого майбутнього.">
+        <div class="game-card" data-genre="Shooter" data-title="Battlefield 2042" data-price="599" data-author="DICE" data-year="2021" data-specs="i5-6600K, 8GB RAM, GTX 1050 Ti" data-img="bf2042.jpg" data-desc="Масштабна війна.">
             <div class="card-img" style="background-image: url('bf2042.jpg')"></div>
             <h3>Battlefield 2042</h3><p class="price">599 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Shooter" data-title="COD: Modern Warfare III" data-price="2199" data-author="Activision" data-year="2023" data-specs="i5-6600, 12GB RAM, GTX 960" data-img="mw3.jpg" data-desc="Пряме продовження Modern Warfare II з новою кампанією та зомбі-режимом.">
+        <div class="game-card" data-genre="Shooter" data-title="COD: MW III" data-price="2199" data-author="Activision" data-year="2023" data-specs="i5-6600, 12GB RAM, GTX 960" data-img="mw3.jpg" data-desc="Найкращий шутер сезону.">
             <div class="card-img" style="background-image: url('mw3.jpg')"></div>
             <h3>COD MW III</h3><p class="price">2199 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Simulator" data-title="Euro Truck Sim 2" data-price="299" data-author="SCS Software" data-year="2012" data-specs="Dual Core 2.4 GHz, 4GB RAM" data-img="ets2.jpg" data-desc="Відчуйте спокій та велич європейських трас, керуючи потужною фурою.">
+        <div class="game-card" data-genre="Simulator" data-title="Euro Truck Sim 2" data-price="299" data-author="SCS Software" data-year="2012" data-specs="Dual Core 2.4 GHz, 4GB RAM" data-img="ets2.jpg" data-desc="Далекобійники Європи.">
             <div class="card-img" style="background-image: url('ets2.jpg')"></div>
             <h3>Euro Truck Sim 2</h3><p class="price">299 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-
-        <div class="game-card" data-genre="Action" data-title="Horizon Forbidden West" data-price="1299" data-author="Guerrilla" data-year="2024" data-specs="i5-8400, 16GB RAM, RTX 3060" data-img="hfw.jpg" data-desc="Подорож Елой на Заборонений Захід для порятунку біосфери Землі.">
+        <div class="game-card" data-genre="Action" data-title="Horizon Forbidden West" data-price="1299" data-author="Guerrilla" data-year="2024" data-specs="i5-8400, 16GB RAM, RTX 3060" data-img="hfw.jpg" data-desc="Світ роботів-машин.">
             <div class="card-img" style="background-image: url('hfw.jpg')"></div>
             <h3>Horizon West</h3><p class="price">1299 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Action" data-title="Sekiro" data-price="799" data-author="FromSoftware" data-year="2019" data-specs="i3-2100, 4GB RAM, GTX 760" data-img="sekiro.jpg" data-desc="Станьте одноруким вовком у феодальній Японії та киньте виклик долі.">
+        <div class="game-card" data-genre="Action" data-title="Sekiro" data-price="799" data-author="FromSoftware" data-year="2019" data-specs="i3-2100, 4GB RAM, GTX 760" data-img="sekiro.jpg" data-desc="Тіні помирають двічі.">
             <div class="card-img" style="background-image: url('sekiro.jpg')"></div>
             <h3>Sekiro</h3><p class="price">799 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Action" data-title="RE 4 Remake" data-price="1199" data-author="Capcom" data-year="2023" data-specs="i5-7500, 8GB RAM, GTX 1050 Ti" data-img="re4.jpg" data-desc="Леон Кеннеді вирушає в іспанське село на пошуки доньки президента.">
+        <div class="game-card" data-genre="Action" data-title="RE 4 Remake" data-price="1199" data-author="Capcom" data-year="2023" data-specs="i5-7500, 8GB RAM, GTX 1050 Ti" data-img="re4.jpg" data-desc="Виживання в жаху.">
             <div class="card-img" style="background-image: url('re4.jpg')"></div>
             <h3>RE 4 Remake</h3><p class="price">1199 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Action" data-title="Last of Us Part I" data-price="1499" data-author="Naughty Dog" data-year="2023" data-specs="i7-4770K, 16GB RAM, RTX 2060" data-img="tlou1.jpg" data-desc="Одна з найбільш емоційних та кінематографічних ігор в історії.">
+        <div class="game-card" data-genre="Action" data-title="The Last of Us Part I" data-price="1499" data-author="Naughty Dog" data-year="2023" data-specs="i7-4770K, 16GB RAM, RTX 2060" data-img="tlou1.jpg" data-desc="Емоційна подорож.">
             <div class="card-img" style="background-image: url('tlou1.jpg')"></div>
             <h3>TLOU Part I</h3><p class="price">1499 грн</p>
-            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
-        </div>
-        <div class="game-card" data-genre="RPG" data-title="Final Fantasy VII" data-price="1599" data-author="Square Enix" data-year="2024" data-specs="i7-6700, 16GB RAM, RTX 2070" data-img="ff7.jpg" data-desc="Продовження легендарного переосмислення класичної RPG.">
-            <div class="card-img" style="background-image: url('ff7.jpg')"></div>
-            <h3>FF VII Rebirth</h3><p class="price">1599 грн</p>
-            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
-        </div>
-
-        <div class="game-card" data-genre="Simulator" data-title="MS Flight Sim" data-price="1699" data-author="Asobo" data-year="2020" data-specs="i5-8400, 16GB RAM, GTX 970" data-img="mfs.jpg" data-desc="Весь світ у ваших руках — від легких літаків до величезних авіалайнерів.">
-            <div class="card-img" style="background-image: url('mfs.jpg')"></div>
-            <h3>Flight Sim</h3><p class="price">1699 грн</p>
-            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
-        </div>
-        <div class="game-card" data-genre="Shooter" data-title="DOOM Eternal" data-price="499" data-author="id Software" data-year="2020" data-specs="i5-2400, 8GB RAM, GTX 1060" data-img="doom.jpg" data-desc="Винищуйте легіони демонів у найдинамічнішому шутері сучасності.">
-            <div class="card-img" style="background-image: url('doom.jpg')"></div>
-            <h3>DOOM Eternal</h3><p class="price">499 грн</p>
-            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
-        </div>
-        <div class="game-card" data-genre="Action" data-title="Dying Light 2" data-price="899" data-author="Techland" data-year="2022" data-specs="i5-6700, 8GB RAM, GTX 1050 Ti" data-img="dl2.jpg" data-desc="Паркур, зомбі та складні рішення у місті, що розривається на частини.">
-            <div class="card-img" style="background-image: url('dl2.jpg')"></div>
-            <h3>Dying Light 2</h3><p class="price">899 грн</p>
-            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
-        </div>
-        <div class="game-card" data-genre="Shooter" data-title="Titanfall 2" data-price="199" data-author="Respawn" data-year="2016" data-specs="i3-3600, 8GB RAM, GTX 660" data-img="titanfall2.jpg" data-desc="Один з найкращих шутерів з титанами та унікальним геймплеєм.">
-            <div class="card-img" style="background-image: url('titanfall2.jpg')"></div>
-            <h3>Titanfall 2</h3><p class="price">199 грн</p>
-            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
-        </div>
-        <div class="game-card" data-genre="Simulator" data-title="Sims 4" data-price="0" data-author="EA" data-year="2014" data-specs="Core 2 Duo, 4GB RAM" data-img="sims4.jpg" data-desc="Керуйте життям віртуальних людей у найвідомішому симуляторі життя.">
-            <div class="card-img" style="background-image: url('sims4.jpg')"></div>
-            <h3>The Sims 4</h3><p class="price">Безкоштовно</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Детальніше</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
     </main>
@@ -172,11 +142,8 @@
         </div>
         <div id="cart-items" class="cart-list"></div>
         <div class="sidebar-footer">
-            <div class="total-row">
-                <span>Разом:</span>
-                <span class="total-price"><span id="cart-total">0</span> грн</span>
-            </div>
-            <button class="checkout-btn" onclick="clearCart()">✓ Оформити замовлення</button>
+            <div class="total-row"><span>Разом:</span><span class="total-price"><span id="cart-total">0</span> грн</span></div>
+            <button class="checkout-btn" onclick="checkout()">✓ Оформити замовлення</button>
         </div>
     </div>
 
