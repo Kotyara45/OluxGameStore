@@ -1,12 +1,17 @@
-<html>
+<!DOCTYPE html>
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTA 6 - Спеціальна Пропозиція</title>
+    <title>GTA VI - Запуск у WEB | OluxGameStore</title>
     <link rel="stylesheet" href="style.css">
-    
     <style>
-        .gta-page {
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: #0b0114;
+            color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -14,66 +19,129 @@
             min-height: 100vh;
             text-align: center;
         }
+
+        .container {
+            max-width: 800px;
+            width: 90%;
+            margin-top: -20px; 
+        }
+
+        .main-art {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 30px;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.4);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 42px;
+            margin: 10px 0;
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
+
+        .gta-launch-btn {
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 10px 30px rgba(255, 0, 255, 0.4);
+            transition: 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .gta-launch-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 255, 255, 0.6);
+        }
+
+        .btn-back {
+            display: inline-block;
+            color: #888;
+            text-decoration: none;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+
         .prank-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background-color: black;
             color: white;
-            display: none; /* Приховано за замовчуванням */
+            display: none;
             align-items: center;
             justify-content: center;
             font-size: 3em;
             font-weight: bold;
-            z-index: 100;
+            z-index: 1000;
         }
-        .prank-overlay.active {
-            display: flex;
-        }
-        .prank-overlay video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
+
+        .prank-overlay.active { display: flex; }
+        .prank-overlay video { width: 100%; height: 100%; object-fit: contain; }
     </style>
 </head>
-<body class="gta-page">
-    <header>
-        <h1>OluxGameStore</h1>
-        <nav>
-            <a href="index.html">Каталог 1</a>
-            <a href="catalog2.html">Каталог 2</a>
-            <a href="catalog3.html">Каталог 3</a>
-            <a href="catalog4.html">Каталог 4</a>
-            <a href="catalog5.html">Каталог 5</a>
-            <a href="gta6.html" class="gta-link active">Спец. Пропозиція (GTA 6)</a>
-        </nav>
-    </header>
+<body>
 
-    <h2>Grand Theft Auto VI - Спеціальна Пропозиція</h2>
-    <p>Натисніть кнопку нижче, щоб запустити гру прямо у веб-режимі!</p>
-    <button id="launch-button" class="gta-launch-btn">ЗАПУСК ГРИ В WEB РЕЖИМІ</button>
+    <div class="container">
+        <img src="gtavi.jpg" alt="GTA 6 Art" class="main-art">
+
+        <h1>OluxGameStore</h1>
+        <p>Ексклюзивна пропозиція: натисніть кнопку нижче, щоб запустити гру прямо у веб-режимі!</p>
+
+        <button id="launch-button" class="gta-launch-btn">ЗАПУСК ГРИ В WEB РЕЖИМІ</button>
+
+        <div class="order-box" style="margin-top: 20px;">
+            <p style="color: #ff00ff; font-weight: bold; font-size: 24px;">Ціна: 2499 грн</p>
+            <button class="gta-launch-btn" style="padding: 10px 30px; font-size: 16px;" onclick="window.location.href='https://donatello.to/OluxGameStore'">
+                ПЕРЕДЗАМОВИТИ
+            </button>
+        </div>
+
+        <br>
+        <a href="index.html" class="btn-back">← ПОВЕРНУТИСЯ ДО КАТАЛОГУ</a>
+    </div>
 
     <div id="prank-overlay" class="prank-overlay">
-        <span id="prank-text"></span>
-        
         <video id="video-player" style="display: none;">
             <source src="gta_load.mp4" type="video/mp4">
-            Ваш браузер не підтримує тег video.
         </video>
-        
         <video id="final-video-player" style="display: none;">
             <source src="you_been_toled.mp4" type="video/mp4">
-            Ваш браузер не підтримує тег video.
         </video>
     </div>
 
-    <p style="margin-top: 50px; color: gray;">
-        *Увага: Це спеціальна тестова версія.
-    </p>
+    <script>
+        const launchBtn = document.getElementById('launch-button');
+        const prankOverlay = document.getElementById('prank-overlay');
+        const video1 = document.getElementById('video-player');
+        const video2 = document.getElementById('final-video-player');
 
-    <script src="script.js"></script>
+        launchBtn.addEventListener('click', () => {
+            prankOverlay.classList.add('active');
+            video1.style.display = 'block';
+            video1.play();
+
+            video1.onended = () => {
+                video1.style.display = 'none';
+                video2.style.display = 'block';
+                video2.play();
+            };
+        });
+
+        prankOverlay.onclick = () => {
+            prankOverlay.classList.remove('active');
+            video1.pause();
+            video2.pause();
+        };
+    </script>
 </body>
 </html>
