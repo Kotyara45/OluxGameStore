@@ -1,4 +1,4 @@
-<html>
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,11 +17,11 @@
             <a href="gta6.html" class="gta6-nav-btn"><span>GTA VI</span> <small>СПЕЦ. ПРОПОЗИЦІЯ</small></a>
             
             <div id="auth-section">
-                <button onclick="toggleAuthModal()" style="padding: 8px 15px; border-radius: 8px; border: 1px solid gold; cursor: pointer; background: none; color: #4a3427;">Вхід / Реєстрація</button>
+                <button onclick="toggleAuthModal()">Вхід / Реєстрація</button>
             </div>
 
-            <button id="history-btn" style="display: none; padding: 8px 15px; border-radius: 8px; border: 1px solid #444; cursor: pointer; background: none; color: #4a3427;">Історія</button>
-            <button id="admin-panel-btn" style="display: none; padding: 8px 15px; border-radius: 8px; border: 1px solid gold; cursor: pointer; background: gold; color: black; font-weight: bold;">Адмін Панель</button>
+            <button id="history-btn" onclick="toggleHistoryModal()" style="display: none;">Історія</button>
+            <button id="admin-panel-btn" onclick="toggleAdminPanel()" style="display: none; background: gold; color: black;">Адмін Панель</button>
             <button id="logout-btn" onclick="signOut()" style="display: none; background: none; border: none; color: #ff4444; cursor: pointer; font-size: 20px;">➔</button>
 
             <div id="cart-btn" class="cart-trigger">
@@ -64,7 +64,7 @@
             <h3>Witcher 3</h3><p class="price">399 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="RPG" data-title="Baldur’s Gate 3" data-price="1299" data-author="Larian Studios" data-year="2023" data-specs="i7-8700K, 16GB RAM, RTX 2060" data-img="baldursgate3.jpg" data-desc="Найкраща RPG останніх років з неймовірною свободою.">
+        <div class="game-card" data-genre="RPG" data-title="Baldur’s Gate 3" data-price="1299" data-author="Larian Studios" data-year="2023" data-specs="i7-8700K, 16GB RAM, RTX 2060" data-img="baldursgate3.jpg" data-desc="Найкраща RPG останніх років.">
             <div class="card-img" style="background-image: url('baldursgate3.jpg')"></div>
             <h3>Baldur’s Gate 3</h3><p class="price">1299 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
@@ -74,27 +74,27 @@
             <h3>Hogwarts Legacy</h3><p class="price">1199 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="RPG" data-title="Starfield" data-price="1499" data-author="Bethesda" data-year="2023" data-specs="i5-10600K, 16GB RAM, RTX 2080" data-img="starfield.jpg" data-desc="Епічна космічна пригода від творців Skyrim.">
+        <div class="game-card" data-genre="RPG" data-title="Starfield" data-price="1499" data-author="Bethesda" data-year="2023" data-specs="i5-10600K, 16GB RAM, RTX 2080" data-img="starfield.jpg" data-desc="Епічна космічна пригода.">
             <div class="card-img" style="background-image: url('starfield.jpg')"></div>
             <h3>Starfield</h3><p class="price">1499 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Simulator" data-title="Forza Horizon 5" data-price="999" data-author="Playground Games" data-year="2021" data-specs="i5-4460, 8GB RAM, GTX 970" data-img="forzahorizon5.jpg" data-desc="Неймовірні гонки відкритими дорогами Мексики.">
+        <div class="game-card" data-genre="Simulator" data-title="Forza Horizon 5" data-price="999" data-author="Playground Games" data-year="2021" data-specs="i5-4460, 8GB RAM, GTX 970" data-img="forzahorizon5.jpg" data-desc="Неймовірні гонки у Мексиці.">
             <div class="card-img" style="background-image: url('forzahorizon5.jpg')"></div>
             <h3>Forza Horizon 5</h3><p class="price">999 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Action" data-title="AC Mirage" data-price="1299" data-author="Ubisoft" data-year="2023" data-specs="i7-8700K, 16GB RAM, RTX 2060" data-img="acmirage.jpg" data-desc="Повернення до коріння серії в стародавньому Багдаді.">
+        <div class="game-card" data-genre="Action" data-title="AC Mirage" data-price="1299" data-author="Ubisoft" data-year="2023" data-specs="i7-8700K, 16GB RAM, RTX 2060" data-img="acmirage.jpg" data-desc="Повернення до коріння серії в Багдаді.">
             <div class="card-img" style="background-image: url('acmirage.jpg')"></div>
             <h3>AC Mirage</h3><p class="price">1299 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Action" data-title="Spider-Man Remastered" data-price="899" data-author="Insomniac" data-year="2022" data-specs="i7-3770, 16GB RAM, RTX 2060" data-img="spidermanremastered.jpg" data-desc="Станьте Людиною-Павуком у покращеній версії для ПК.">
+        <div class="game-card" data-genre="Action" data-title="Spider-Man Remastered" data-price="899" data-author="Insomniac" data-year="2022" data-specs="i7-3770, 16GB RAM, RTX 2060" data-img="spidermanremastered.jpg" data-desc="Станьте Людиною-Павуком на ПК.">
             <div class="card-img" style="background-image: url('spidermanremastered.jpg')"></div>
             <h3>Spider-Man</h3><p class="price">899 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Action" data-title="God of War" data-price="799" data-author="Santa Monica" data-year="2022" data-specs="i5-2500K, 8GB RAM, GTX 960" data-img="gow2018.jpg" data-desc="Кратос та Атрей у світі скандинавських міфів.">
+        <div class="game-card" data-genre="Action" data-title="God of War" data-price="799" data-author="Santa Monica" data-year="2022" data-specs="i5-2500K, 8GB RAM, GTX 960" data-img="gow2018.jpg" data-desc="Кратос у світі скандинавських міфів.">
             <div class="card-img" style="background-image: url('gow2018.jpg')"></div>
             <h3>God of War</h3><p class="price">799 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
@@ -109,7 +109,7 @@
             <h3>COD MW III</h3><p class="price">2199 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Simulator" data-title="Euro Truck Sim 2" data-price="299" data-author="SCS Software" data-year="2012" data-specs="Dual Core 2.4 GHz, 4GB RAM" data-img="ets2.jpg" data-desc="Найкращий симулятор вантажівок у Європі.">
+        <div class="game-card" data-genre="Simulator" data-title="Euro Truck Sim 2" data-price="299" data-author="SCS Software" data-year="2012" data-specs="Dual Core 2.4 GHz, 4GB RAM" data-img="ets2.jpg" data-desc="Симулятор вантажівок у Європі.">
             <div class="card-img" style="background-image: url('ets2.jpg')"></div>
             <h3>ETS 2</h3><p class="price">299 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
@@ -119,17 +119,17 @@
             <h3>Horizon West</h3><p class="price">1299 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Action" data-title="Sekiro" data-price="799" data-author="FromSoftware" data-year="2019" data-specs="i3-2100, 4GB RAM, GTX 760" data-img="sekiro.jpg" data-desc="Складний екшен про однорукого вовка-самурая.">
+        <div class="game-card" data-genre="Action" data-title="Sekiro" data-price="799" data-author="FromSoftware" data-year="2019" data-specs="i3-2100, 4GB RAM, GTX 760" data-img="sekiro.jpg" data-desc="Складний екшен про самурая.">
             <div class="card-img" style="background-image: url('sekiro.jpg')"></div>
             <h3>Sekiro</h3><p class="price">799 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Action" data-title="RE 4 Remake" data-price="1199" data-author="Capcom" data-year="2023" data-specs="i5-7500, 8GB RAM, GTX 1050 Ti" data-img="re4remake.jpg" data-desc="Повне переосмислення класичного хорору.">
+        <div class="game-card" data-genre="Action" data-title="RE 4 Remake" data-price="1199" data-author="Capcom" data-year="2023" data-specs="i5-7500, 8GB RAM, GTX 1050 Ti" data-img="re4remake.jpg" data-desc="Класичний хорор у новій обгортці.">
             <div class="card-img" style="background-image: url('re4remake.jpg')"></div>
             <h3>RE 4 Remake</h3><p class="price">1199 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Action" data-title="TLOU Part I" data-price="1499" data-author="Naughty Dog" data-year="2023" data-specs="i7-4770K, 16GB RAM, RTX 2060" data-img="tlou1.jpg" data-desc="Емоційна подорож Джоела та Еллі через спустошену Америку.">
+        <div class="game-card" data-genre="Action" data-title="TLOU Part I" data-price="1499" data-author="Naughty Dog" data-year="2023" data-specs="i7-4770K, 16GB RAM, RTX 2060" data-img="tlou1.jpg" data-desc="Емоційна подорож Джоела та Еллі.">
             <div class="card-img" style="background-image: url('tlou1.jpg')"></div>
             <h3>TLOU Part I</h3><p class="price">1499 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
@@ -137,22 +137,12 @@
     </main>
 
     <div id="cart-sidebar" class="sidebar">
-        <div class="sidebar-header">
-            <h2>Кошик</h2>
-            <span onclick="toggleCart()" style="cursor:pointer; font-size:30px;">&times;</span>
-        </div>
+        <div class="sidebar-header"><h2>Кошик</h2><span onclick="toggleCart()" style="cursor:pointer; font-size:30px;">&times;</span></div>
         <div id="cart-items"></div>
-        <div class="sidebar-footer">
-            <h3>Разом: <span id="cart-total">0</span> грн</h3>
-            <button class="checkout-btn" onclick="checkout()">ОФОРМИТИ</button>
-        </div>
+        <div class="sidebar-footer"><h3>Разом: <span id="cart-total">0</span> грн</h3><button class="checkout-btn" onclick="checkout()">ОФОРМИТИ</button></div>
     </div>
 
-    <div id="details-modal" class="modal">
-        <div class="modal-content">
-            <div id="modal-data" class="modal-layout"></div>
-        </div>
-    </div>
+    <div id="details-modal" class="modal"><div class="modal-content"><div id="modal-data" class="modal-layout"></div></div></div>
     
     <div id="auth-modal">
         <h3>Вхід / Реєстрація</h3>
@@ -160,7 +150,13 @@
         <input type="password" id="auth-password" placeholder="Пароль">
         <button class="login-primary" onclick="signIn()">УВІЙТИ</button>
         <button class="login-secondary" onclick="signUp()">СТВОРИТИ АКАУНТ</button>
-        <p onclick="toggleAuthModal()" style="cursor:pointer; font-size:12px; margin-top:10px; color:#666;">Закрити</p>
+        <p onclick="closeModal()" style="cursor:pointer; font-size:12px; margin-top:10px; color:#666;">Закрити</p>
+    </div>
+
+    <div id="history-modal">
+        <h3 style="color:black; margin-top:0;">Ваші покупки</h3>
+        <div id="history-list"></div>
+        <button onclick="closeModal()" style="width:100%; padding:10px; margin-top:10px; border:none; background:#eee; cursor:pointer; border-radius:10px;">Закрити</button>
     </div>
 
     <div id="overlay" class="overlay"></div>
