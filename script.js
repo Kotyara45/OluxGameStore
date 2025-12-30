@@ -8,6 +8,7 @@ const overlay = document.getElementById('overlay');
 window.onload = () => {
     sbClient = supabase.createClient(SB_URL, SB_KEY);
     checkUser();
+
     const banner = document.getElementById('joke-banner');
     if (banner) {
         setTimeout(() => {
@@ -20,8 +21,11 @@ function openDetails(btn) {
     const d = btn.closest('.game-card').dataset;
     const modal = document.getElementById('details-modal');
     const modalData = document.getElementById('modal-data');
+    
     modalData.innerHTML = `
-        <div class="modal-img-side"><img src="${d.img}" alt="${d.title}"></div>
+        <div class="modal-img-side">
+            <img src="${d.img}" alt="${d.title}">
+        </div>
         <div class="modal-info-side">
             <span class="close-btn-large" onclick="closeModal()">&times;</span>
             <h2>${d.title}</h2>
@@ -32,8 +36,11 @@ function openDetails(btn) {
                 <li><strong>Рік випуску:</strong> ${d.year}</li>
                 <li><strong>Мін. вимоги:</strong> ${d.specs}</li>
             </ul>
-            <button class="modal-buy-btn" onclick="addToCartDirect('${d.title}', ${d.price}, '${d.img}')">Додати у кошик</button>
+            <button class="modal-buy-btn" onclick="addToCartDirect('${d.title}', ${d.price}, '${d.img}')">
+                Додати у кошик
+            </button>
         </div>`;
+    
     modal.classList.add('active');
     overlay.classList.add('active');
 }
@@ -46,7 +53,11 @@ function addToCartDirect(title, price, img) {
 
 function addToCart(btn) {
     const d = btn.closest('.game-card').dataset;
-    cart.push({ title: d.title, price: parseInt(d.price) || 0, img: d.img });
+    cart.push({ 
+        title: d.title, 
+        price: parseInt(d.price) || 0, 
+        img: d.img 
+    });
     updateUI();
 }
 
@@ -54,19 +65,23 @@ function updateUI() {
     const cartCount = document.getElementById('cart-count');
     const cartItems = document.getElementById('cart-items');
     const cartTotal = document.getElementById('cart-total');
+    
     cartCount.innerText = cart.length;
+    
     let total = 0;
     cartItems.innerHTML = cart.map((item, i) => {
         total += item.price;
-        return `<div class="cart-item">
-            <img src="${item.img}">
-            <div style="flex:1;">
-                <div style="font-weight:bold; font-size:14px; color:black;">${item.title}</div>
-                <div style="color:#d4af37; font-weight:bold;">${item.price} грн</div>
-            </div>
-            <span style="cursor:pointer; color:#ff4444;" onclick="removeFromCart(${i})">✕</span>
-        </div>`;
+        return `
+            <div class="cart-item">
+                <img src="${item.img}" alt="${item.title}">
+                <div style="flex: 1;">
+                    <div style="font-weight: bold; font-size: 14px; color: black;">${item.title}</div>
+                    <div style="color: #d4af37; font-weight: bold;">${item.price} грн</div>
+                </div>
+                <span style="cursor: pointer; color: #ff4444; font-weight: bold;" onclick="removeFromCart(${i})">✕</span>
+            </div>`;
     }).join('');
+    
     cartTotal.innerText = total;
 }
 
@@ -76,7 +91,10 @@ function removeFromCart(index) {
 }
 
 function checkout() {
-    if (cart.length === 0) { alert("Ваш кошик порожній!"); return; }
+    if (cart.length === 0) {
+        alert("Ваш кошик порожній!");
+        return;
+    }
     window.location.href = 'https://donatello.to/OluxGameStore';
 }
 
@@ -105,9 +123,16 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.onclick = () => {
         document.querySelector('.filter-btn.active').classList.remove('active');
         btn.classList.add('active');
+        
         const genre = btn.dataset.genre;
-        document.querySelectorAll('.game-card').forEach(card => {
-            card.style.display = (genre === 'all' || card.dataset.genre === genre) ? 'block' : 'none';
+        const cards = document.querySelectorAll('.game-card');
+        
+        cards.forEach(card => {
+            if (genre === 'all' || card.dataset.genre === genre) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
         });
     };
 });
@@ -118,7 +143,9 @@ async function checkUser() {
         document.getElementById('auth-section').style.display = 'none';
         document.getElementById('logout-btn').style.display = 'block';
         document.getElementById('history-btn').style.display = 'block';
-        if (user.email === OWNER_EMAIL) document.getElementById('admin-panel-btn').style.display = 'block';
+        if (user.email === OWNER_EMAIL) {
+            document.getElementById('admin-panel-btn').style.display = 'block';
+        }
     }
 }
 
@@ -140,7 +167,7 @@ async function signUp() {
     const e = document.getElementById('auth-email').value;
     const p = document.getElementById('auth-password').value;
     const { error } = await sbClient.auth.signUp({ email: e, password: p });
-    if (error) alert(error.message); else alert("Перевірте пошту!");
+    if (error) alert(error.message); else alert("Перевірте пошту для підтвердження!");
 }
 
 async function signOut() {
