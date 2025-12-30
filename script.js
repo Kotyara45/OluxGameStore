@@ -1,44 +1,185 @@
 const SB_URL = 'https://yoxieszknznklpvnyvui.supabase.co';
 const SB_KEY = 'sb_publishable_ZLbve8ADHIqc48h2YOQQUw_z8vox0s9';
 const OWNER_EMAIL = 'nazarivanyuk562@gmail.com';
-let sbClient, cart = [];
+let sbClient;
+let cart = [];
+const overlay = document.getElementById('overlay');
 
 window.onload = () => {
     sbClient = supabase.createClient(SB_URL, SB_KEY);
     checkUser();
+
+    const banner = document.getElementById('joke-banner');
+    if (banner) {
+        setTimeout(() => {
+            banner.style.transition = 'opacity 1s';
+            banner.style.opacity = '0';
+            setTimeout(() => banner.remove(), 1000);
+        }, 5000);
+    }
 };
+
+function openDetails(btn) {
+    const d = btn.closest('.game-card').dataset;
+    const modal = document.getElementById('details-modal');
+    const modalData = document.getElementById('modal-data');
+    
+    modalData.innerHTML = `
+        <div class="modal-img-side">
+            <img src="${d.img}" alt="${d.title}">
+        </div>
+        <div class="modal-info-side">
+            <span class="close-btn-large" onclick="closeModal()">&times;</span>
+            <h2>${d.title}</h2>
+            <div class="modal-price">${d.price} грн</div>
+            <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">${d.desc}</p>
+            <ul class="modal-specs">
+                <li><strong>Видавець:</strong> ${d.author}</li>
+                <li><strong>Рік випуску:</strong> ${d.year}</li>
+                <li><strong>Мін. вимоги:</strong> ${d.specs}</li>
+            </ul>
+            <button class="modal-buy-btn" onclick="addToCartDirect('${d.title}', ${d.price}, '${d.img}')">
+                Додати у кошик
+            </button>
+        </div>`;
+    
+    modal.classList.add('active');
+    overlay.classList.add('active');
+}
+
+function addToCartDirect(title, price, img) {
+    cart.push({ title, price: parseInt(price) || 0, img });
+    updateUI();
+    closeModal();
+}
+
+function addToCart(btn) {
+    const d = btn.closest('.game-card').dataset;
+    cart.push({ 
+        title: d.title, 
+        price: parseInt(d.price) || 0, 
+        img: d.img 
+    });
+    updateUI();
+}
+
+function updateUI() {
+    const cartCount = document.getElementById('cart-count');
+    const cartItems = document.getElementById('cart-items');
+    const cartTotal = document.getElementById('cart-total');
+    
+    cartCount.innerText = cart.length;
+    
+    let total = 0;
+    cartItems.innerHTML = cart.map((item, i) => {
+        total += item.price;
+        return `
+            <div class="cart-item">
+                <img src="${item.img}" alt="${item.title}">
+                <div style="flex: 1;">
+                    <div style="font-weight: bold; font-size: 14px; color: black;">${item.title}</div>
+                    <div style="color: #d4af37; font-weight: bold;">${item.price} грн</div>
+                </div>
+                <span style="cursor: pointer; color: #ff4444; font-weight: bold;" onclick="removeFromCart(${i})">✕</span>
+            </div>`;
+    }).join('');
+    
+    cartTotal.innerText = total;
+}
+
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    updateUI();
+}
+
+function checkout() {
+    if (cart.length === 0) {
+        alert("Ваш кошик порожній!");
+        return;
+    }
+    window.location.href = 'https://donatello.to/OluxGameStore';
+}
+
+function closeModal() {
+    document.getElementById('details-modal').classList.remove('active');
+    const authModal = document.getElementById('auth-modal');
+    if(authModal) authModal.style.display = 'none';
+    if (!document.getElementById('cart-sidebar').classList.contains('active')) {
+        overlay.classList.remove('active');
+    }
+}
+
+function toggleCart() {
+    const sidebar = document.getElementById('cart-sidebar');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active', sidebar.classList.contains('active'));
+}
+
+overlay.onclick = () => {
+    document.getElementById('details-modal').classList.remove('active');
+    document.getElementById('cart-sidebar').classList.remove('active');
+    const authModal = document.getElementById('auth-modal');
+    if(authModal) authModal.style.display = 'none';
+    overlay.classList.remove('active');
+};
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.onclick = () => {
+        const activeBtn = document.querySelector('.filter-btn.active');
+        if (activeBtn) activeBtn.classList.remove('active');
+        btn.classList.add('active');
+        
+        const genre = btn.dataset.genre;
+        const cards = document.querySelectorAll('.game-card');
+        
+        cards.forEach(card => {
+            if (genre === 'all' || card.dataset.genre === genre) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    };
+});
 
 async function checkUser() {
     const { data: { user } } = await sbClient.auth.getUser();
-    const adminBtn = document.getElementById('admin-panel-btn');
-    const authSec = document.getElementById('auth-section');
-    const logBtn = document.getElementById('logout-btn');
-    const histBtn = document.getElementById('history-btn');
-
     if (user) {
+        const authSec = document.getElementById('auth-section');
         if(authSec) authSec.style.display = 'none';
-        if(logBtn) logBtn.style.display = 'block';
-        if(histBtn) histBtn.style.display = 'block';
+        
+        const logoutBtn = document.getElementById('logout-btn');
+        if(logoutBtn) logoutBtn.style.display = 'block';
+        
+        const historyBtn = document.getElementById('history-btn');
+        if(historyBtn) historyBtn.style.display = 'block';
 
         if (user.email === OWNER_EMAIL) {
-            if(adminBtn) adminBtn.style.display = 'block';
-            document.getElementById('owner-tools').style.display = 'block';
+            const adminBtn = document.getElementById('admin-panel-btn');
+            if (adminBtn) adminBtn.style.display = 'block';
         }
     }
+}
+
+function toggleAuthModal() {
+    const m = document.getElementById('auth-modal');
+    const isVisible = m.style.display === 'block';
+    m.style.display = isVisible ? 'none' : 'block';
+    overlay.classList.toggle('active', !isVisible);
 }
 
 async function signIn() {
     const e = document.getElementById('auth-email').value;
     const p = document.getElementById('auth-password').value;
     const { error } = await sbClient.auth.signInWithPassword({ email: e, password: p });
-    if (error) alert(error.message); else location.reload();
+    if (error) alert("Помилка: " + error.message); else location.reload();
 }
 
 async function signUp() {
     const e = document.getElementById('auth-email').value;
     const p = document.getElementById('auth-password').value;
     const { error } = await sbClient.auth.signUp({ email: e, password: p });
-    if (error) alert(error.message); else alert("Перевірте пошту для підтвердження!");
+    if (error) alert("Помилка: " + error.message); else alert("Перевірте пошту!");
 }
 
 async function signOut() {
@@ -46,62 +187,5 @@ async function signOut() {
     location.reload();
 }
 
-function toggleAuthModal() {
-    document.getElementById('auth-modal').style.display = 
-        document.getElementById('auth-modal').style.display === 'none' ? 'block' : 'none';
-    document.getElementById('overlay').classList.toggle('active');
-}
-
-function toggleAdminPanel() {
-    const m = document.getElementById('admin-modal');
-    m.classList.toggle('active');
-    document.getElementById('overlay').classList.toggle('active');
-}
-
-function openDetails(btn) {
-    const d = btn.closest('.game-card').dataset;
-    const modalData = document.getElementById('modal-data');
-    modalData.innerHTML = `
-        <div class="modal-img-side"><img src="${d.img}" style="width:100%; border-radius:15px;"></div>
-        <div class="modal-info-side">
-            <span class="close-btn-large" onclick="closeModal()">&times;</span>
-            <h2>${d.title}</h2>
-            <div class="modal-price">${d.price} грн</div>
-            <p>${d.desc}</p>
-            <button class="modal-buy-btn" onclick="addToCartDirect('${d.title}', ${d.price}, '${d.img}')">Додати в кошик</button>
-        </div>`;
-    document.getElementById('details-modal').classList.add('active');
-    document.getElementById('overlay').classList.add('active');
-}
-
-function closeModal() {
-    document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
-    document.getElementById('auth-modal').style.display = 'none';
-    document.getElementById('overlay').classList.remove('active');
-}
-
-function addToCart(btn) {
-    const d = btn.closest('.game-card').dataset;
-    cart.push({ title: d.title, price: parseInt(d.price), img: d.img });
-    updateUI();
-}
-
-function updateUI() {
-    document.getElementById('cart-count').innerText = cart.length;
-    let total = 0;
-    const items = document.getElementById('cart-items');
-    items.innerHTML = cart.map((item, i) => {
-        total += item.price;
-        return `<div class="cart-item"><img src="${item.img}" width="40"> ${item.title} - ${item.price} грн</div>`;
-    }).join('');
-    document.getElementById('cart-total').innerText = total;
-}
-
-async function sendSupportMessage() {
-    const i = document.getElementById('user-msg');
-    if (!i.value) return;
-    const m = document.getElementById('chat-messages');
-    m.innerHTML += `<div style="align-self: flex-end; background: gold; color: black; padding: 8px; border-radius: 10px; max-width: 80%;">${i.value}</div>`;
-    i.value = '';
-    m.scrollTop = m.scrollHeight;
-}
+const cartBtn = document.getElementById('cart-btn');
+if (cartBtn) cartBtn.onclick = toggleCart;
