@@ -58,36 +58,116 @@ async function updateAuthUI() {
     if ((userRole === 'owner' || userRole === 'admin' || userRole === 'moderator') && adminBtn) {
         adminBtn.style.display = 'block';
         adminBtn.innerText = userRole === 'owner' ? "Власник 👑" : (userRole === 'admin' ? "Адмін 🛠" : "Модер 🛡");
+        adminBtn.onclick = openAdminModal;
     }
 }
 
-async function signIn() {
-    const email = document.getElementById('auth-email')?.value;
-    const password = document.getElementById('auth-password')?.value;
-    const { error } = await sbClient.auth.signInWithPassword({ email, password });
-    if (error) alert(error.message);
+function openAdminModal() {
+    const modalData = document.getElementById('modal-data');
+    const modal = document.getElementById('details-modal');
+    if (!modalData || !modal) return;
+
+    modalData.innerHTML = `
+        <div class="modal-info-side" style="width: 100%; padding: 30px;">
+            <span class="close-btn-large" onclick="closeModal()">&times;</span>
+            <h2 style="color:black; margin-bottom: 20px;">Панель керування: ${userRole.toUpperCase()}</h2>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button class="filter-btn active" onclick="showAdminTab('add')">Додати гру</button>
+                <button class="filter-btn" onclick="showAdminTab('orders')">Замовлення</button>
+                ${userRole === 'owner' ? '<button class="filter-btn" onclick="showAdminTab('users')">Права</button>' : ''}
+            </div>
+
+            <div id="admin-tab-content">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <input type="text" id="g-title" placeholder="Назва гри" style="padding:10px; border-radius:8px; border:1px solid #ccc;">
+                    <input type="number" id="g-price" placeholder="Ціна (грн)" style="padding:10px; border-radius:8px; border:1px solid #ccc;">
+                    <input type="text" id="g-img" placeholder="URL Фото" style="padding:10px; border-radius:8px; border:1px solid #ccc;">
+                    <input type="text" id="g-author" placeholder="Автор" style="padding:10px; border-radius:8px; border:1px solid #ccc;">
+                    <input type="text" id="g-year" placeholder="Рік" style="padding:10px; border-radius:8px; border:1px solid #ccc;">
+                    <select id="g-genre" style="padding:10px; border-radius:8px; border:1px solid #ccc;">
+                        <option value="action">Action</option>
+                        <option value="rpg">RPG</option>
+                        <option value="horror">Horror</option>
+                    </select>
+                </div>
+                <textarea id="g-desc" placeholder="Опис гри" style="width:100%; margin-top:15px; height:80px; padding:10px; border-radius:8px;"></textarea>
+                <textarea id="g-specs" placeholder="Мінімальні вимоги (ОЗП, Відеокарта...)" style="width:100%; margin-top:10px; height:80px; padding:10px; border-radius:8px;"></textarea>
+                <button class="buy-btn" style="width:100%; margin-top:20px;" onclick="saveNewGame()">ОПУБЛІКУВАТИ НА САЙТ</button>
+            </div>
+        </div>`;
+    
+    modal.classList.add('active');
+    document.getElementById('overlay').classList.add('active');
 }
 
-async function signUp() {
-    const email = document.getElementById('auth-email')?.value;
-    const password = document.getElementById('auth-password')?.value;
-    const { error } = await sbClient.auth.signUp({ email, password });
-    if (error) alert(error.message); else alert("Перевірте пошту!");
+async function showAdminTab(tab) {
+    const content = document.getElementById('admin-tab-content');
+    if (tab === 'add') return openAdminModal();
+    
+    content.innerHTML = '<p style="color:black;">Завантаження...</p>';
+    
+    if (tab === 'orders') {
+        const { data } = await sbClient.from('orders').select('*').order('created_at', { ascending: false });
+        content.innerHTML = (data || []).map(o => `
+            <div style="background:#f4f4f4; padding:10px; margin-bottom:10px; border-radius:8px; color:black;">
+                <b>${o.user_email}</b> - ${o.total_price} грн<br><small>${o.items_names}</small>
+            </div>`).join('') || '<p style="color:black;">Замовлень немає</p>';
+    }
+
+    if (tab === 'users') {
+        content.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <input type="email" id="u-email" placeholder="Email користувача" style="padding:10px;">
+                <select id="u-role" style="padding:10px;">
+                    <option value="admin">Адмін</option>
+                    <option value="moderator">Модератор</option>
+                </select>
+                <button class="buy-btn" onclick="setRole()">НАДАТИ ПРАВА</button>
+            </div>`;
+    }
 }
 
-async function signOut() {
-    await sbClient.auth.signOut();
-    localStorage.removeItem('olux_cart');
-    location.reload();
+async function saveNewGame() {
+    const game = {
+        title: document.getElementById('g-title').value,
+        price: document.getElementById('g-price').value,
+        img: document.getElementById('g-img').value,
+        author: document.getElementById('g-author').value,
+        year: document.getElementById('g-year').value,
+        description: document.getElementById('g-desc').value,
+        specs: document.getElementById('g-specs').value,
+        genre: document.getElementById('g-genre').value
+    };
+    const { error } = await sbClient.from('games').insert([game]);
+    if (error) alert(error.message); else alert("Гру успішно додано!");
+}
+
+async function setRole() {
+    const email = document.getElementById('u-email').value;
+    const role = document.getElementById('u-role').value;
+    const { error } = await sbClient.from('admin_status').upsert([{ user_email: email, role: role }]);
+    if (error) alert(error.message); else alert("Права оновлено!");
+}
+
+async function toggleHistoryModal() {
+    if (!currentUser) return;
+    const modal = document.getElementById('history-modal');
+    const list = document.getElementById('history-list');
+    modal.style.display = 'block';
+    document.getElementById('overlay').classList.add('active');
+    list.innerHTML = 'Завантаження...';
+    const { data } = await sbClient.from('orders').select('*').eq('user_email', currentUser.email).order('created_at', { ascending: false });
+    list.innerHTML = data && data.length ? data.map(o => `
+        <div style="padding:15px; border-bottom:1px solid #eee; color:black; background:white; margin-bottom:8px; border-radius:8px;">
+            <div style="display:flex; justify-content:space-between;"><b>#${o.id.toString().slice(0,6)}</b> <span>${o.total_price} грн</span></div>
+            <small style="color:gray;">${o.items_names}</small>
+        </div>`).join('') : 'Порожньо';
 }
 
 function addToCart(btn) {
     const card = btn.closest('.game-card');
-    const game = {
-        title: card.dataset.title,
-        price: parseFloat(card.dataset.price) || 0,
-        img: card.dataset.img
-    };
+    const game = { title: card.dataset.title, price: parseFloat(card.dataset.price) || 0, img: card.dataset.img };
     if (cart.some(item => item.title === game.title)) return alert("Вже у кошику!");
     cart.push(game);
     saveAndRenderCart();
@@ -112,7 +192,7 @@ function renderCart() {
                 <div style="flex:1;"><b>${item.title}</b><br>${item.price} грн</div>
                 <span onclick="removeFromCart(${i})" style="color:red;cursor:pointer;">✕</span>
             </div>`;
-        }).join('') : '<p style="text-align:center;color:gray;">Порожньо</p>';
+        }).join('') : '<p style="text-align:center;color:gray;padding-top:20px;">Кошик порожній</p>';
     }
     if (totalEl) totalEl.innerText = total;
 }
@@ -132,94 +212,56 @@ async function checkout() {
         cart = [];
         saveAndRenderCart();
         window.location.href = CONFIG.DONATE_URL;
+    } else {
+        alert("Помилка: " + error.message);
     }
 }
 
-function toggleAdminPanel() {
-    const modal = document.getElementById('admin-modal');
-    modal.classList.add('active');
+function openDetails(btn) {
+    const d = btn.closest('.game-card').dataset;
+    const modalData = document.getElementById('modal-data');
+    modalData.innerHTML = `
+        <div class="modal-img-side"><img src="${d.img}" style="width:100%; border-radius:15px;"></div>
+        <div class="modal-info-side">
+            <span class="close-btn-large" onclick="closeModal()">&times;</span>
+            <h2 style="color:black;">${d.title}</h2>
+            <div style="color:#d4af37; font-size:24px; font-weight:bold; margin:10px 0;">${d.price} грн</div>
+            <p style="color:#333;">${d.desc}</p>
+            <div style="background:#f4f4f4; padding:10px; border-radius:10px; margin:15px 0; color:black; font-size:14px;">
+                <p><b>Автор:</b> ${d.author}</p>
+                <p><b>Рік:</b> ${d.year}</p>
+                <p><b>Вимоги:</b> ${d.specs}</p>
+            </div>
+            <button class="buy-btn" style="width:100%;" onclick="addToCartDirect('${d.title}', ${d.price}, '${d.img}')">У КОШИК</button>
+        </div>`;
+    document.getElementById('details-modal').classList.add('active');
     document.getElementById('overlay').classList.add('active');
-    loadAdminSection('orders');
 }
 
-async function loadAdminSection(section) {
-    const content = document.getElementById('admin-content');
-    content.innerHTML = '<p style="color:black;">Завантаження...</p>';
-    
-    if (section === 'orders') {
-        const { data } = await sbClient.from('orders').select('*').order('created_at', { ascending: false });
-        content.innerHTML = `<h3 style="color:black;">Замовлення</h3>` + (data || []).map(o => `<div style="padding:10px;border-bottom:1px solid #ddd;color:black;"><b>${o.user_email}</b>: ${o.total_price} грн<br><small>${o.items_names}</small></div>`).join('');
-    } 
-    
-    if (section === 'add-game') {
-        if (userRole === 'moderator') return content.innerHTML = '<p style="color:red;">У вас немає прав для додавання ігор</p>';
-        content.innerHTML = `
-            <div style="display:flex;flex-direction:column;gap:10px;padding:10px;color:black;">
-                <input type="text" id="g-title" placeholder="Назва гри">
-                <input type="number" id="g-price" placeholder="Ціна (грн)">
-                <input type="text" id="g-img" placeholder="URL Фото">
-                <input type="text" id="g-author" placeholder="Автор/Розробник">
-                <input type="text" id="g-year" placeholder="Рік випуску">
-                <textarea id="g-desc" placeholder="Опис"></textarea>
-                <textarea id="g-specs" placeholder="Мінімальні вимоги"></textarea>
-                <select id="g-genre">
-                    <option value="action">Екшн</option>
-                    <option value="rpg">RPG</option>
-                    <option value="horror">Хорор</option>
-                </select>
-                <button onclick="saveNewGame()" style="background:gold;padding:10px;border:none;cursor:pointer;">ДОДАТИ ГРУ НА САЙТ</button>
-            </div>`;
-    }
-
-    if (section === 'users' && userRole === 'owner') {
-        content.innerHTML = `
-            <div style="padding:10px;color:black;">
-                <h4>Додати Адміна/Модера</h4>
-                <input type="email" id="u-email" placeholder="Email користувача">
-                <select id="u-role">
-                    <option value="admin">Адмін</option>
-                    <option value="moderator">Модер</option>
-                </select>
-                <button onclick="setRole()">Надати права</button>
-            </div>`;
-    }
+function addToCartDirect(title, price, img) {
+    if (cart.some(item => item.title === title)) return alert("Вже у кошику!");
+    cart.push({ title, price: parseFloat(price) || 0, img });
+    saveAndRenderCart();
+    closeModal();
 }
 
-async function saveNewGame() {
-    const game = {
-        title: document.getElementById('g-title').value,
-        price: document.getElementById('g-price').value,
-        img: document.getElementById('g-img').value,
-        author: document.getElementById('g-author').value,
-        year: document.getElementById('g-year').value,
-        description: document.getElementById('g-desc').value,
-        specs: document.getElementById('g-specs').value,
-        genre: document.getElementById('g-genre').value
-    };
-    const { error } = await sbClient.from('games').insert([game]);
-    if (error) alert(error.message); else { alert("Гру додано!"); loadAdminSection('orders'); }
+async function signIn() {
+    const email = document.getElementById('auth-email')?.value;
+    const password = document.getElementById('auth-password')?.value;
+    const { error } = await sbClient.auth.signInWithPassword({ email, password });
+    if (error) alert(error.message);
 }
 
-async function setRole() {
-    const email = document.getElementById('u-email').value;
-    const role = document.getElementById('u-role').value;
-    const { error } = await sbClient.from('admin_status').upsert([{ user_email: email, role: role }]);
-    if (error) alert(error.message); else alert("Права надано!");
+async function signUp() {
+    const email = document.getElementById('auth-email')?.value;
+    const password = document.getElementById('auth-password')?.value;
+    const { error } = await sbClient.auth.signUp({ email, password });
+    if (error) alert(error.message); else alert("Перевірте пошту!");
 }
 
-async function toggleHistoryModal() {
-    if (!currentUser) return;
-    const modal = document.getElementById('history-modal');
-    const list = document.getElementById('history-list');
-    modal.style.display = 'block';
-    document.getElementById('overlay').classList.add('active');
-    list.innerHTML = '<p style="color:black;">Завантаження...</p>';
-    const { data } = await sbClient.from('orders').select('*').eq('user_email', currentUser.email).order('created_at', { ascending: false });
-    list.innerHTML = data && data.length ? data.map(o => `<div style="padding:10px;border-bottom:1px solid #eee;color:black;background:white;margin-bottom:5px;border-radius:5px;"><b>#${o.id.toString().slice(0,6)}</b> - ${o.total_price} грн<br><small>${o.items_names}</small></div>`).join('') : '<p style="color:black;">Порожньо</p>';
-}
-
-function openSupport() {
-    alert("Техпідтримка Olux Store: Напишіть нам на email: support@olux.com або в Telegram @OluxSupport");
+async function signOut() {
+    await sbClient.auth.signOut();
+    location.reload();
 }
 
 function closeModal() {
