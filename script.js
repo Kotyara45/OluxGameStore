@@ -62,7 +62,6 @@ async function updateAuthUI() {
         supportBtn.onclick = openUserSupportForm;
     }
 
-    // Відображення кнопки адміна ТІЛЬКИ ДЛЯ СТАФУ
     if (adminBtn) {
         if (['owner', 'admin', 'moderator'].includes(userRole)) {
             adminBtn.style.display = 'block';
@@ -97,8 +96,6 @@ function getRoleLabel(role) {
     };
     return labels[role] || "ПЕРСОНАЛ";
 }
-
-// --- СИСТЕМА ПІДТРИМКИ (ЮЗЕР) ---
 
 function openUserSupportForm() {
     const modalData = document.getElementById('modal-data');
@@ -147,8 +144,6 @@ async function handleTicketSubmission() {
         closeModal();
     }
 }
-
-// --- ПАНЕЛЬ КЕРУВАННЯ (МОДЕРАТОРИ/АДМІНИ) ---
 
 function openManagementPanel() {
     const modalData = document.getElementById('modal-data');
@@ -238,8 +233,6 @@ async function renderAdminSection(section) {
         area.innerHTML = table + "</div>";
     }
 }
-
-// --- ФУНКЦІЇ ЯДРА (КОШИК / РЕНДЕР) ---
 
 async function executeAddGame() {
     const payload = {
