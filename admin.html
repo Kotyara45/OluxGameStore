@@ -1,65 +1,82 @@
-<html>
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <title>Адмін-панель | OluxGameStore</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .admin-container { padding: 40px 80px; background: white; margin: 40px auto; max-width: 1000px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .admin-wrap { padding: 50px; max-width: 1200px; margin: 0 auto; }
+        .admin-card { background: white; padding: 30px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
         .order-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .order-table th, .order-table td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        .order-table th { background: #f9f9f9; color: var(--brown); }
-        .status-pill { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: #e1f5fe; color: #039be5; }
+        .order-table th, .order-table td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; color: #333; }
+        .order-table th { color: #888; font-size: 14px; text-transform: uppercase; }
+        .price-tag { color: #d4af37; font-weight: bold; }
+        .back-btn { background: #4a3427; color: white; padding: 10px 20px; border-radius: 12px; text-decoration: none; display: inline-block; margin-bottom: 20px; font-weight: bold; }
     </style>
 </head>
-<body>
+<body style="background: #f7f3ed;">
 
-    <header class="header-top">
-        <h1 onclick="window.location.href='index.html'" style="cursor:pointer;">OluxGameStore <small>(ADMIN)</small></h1>
-        <button onclick="window.location.href='index.html'" class="filter-btn">Назад в магазин</button>
-    </header>
-
-    <div class="admin-container">
-        <h2>Всі замовлення</h2>
-        <table class="order-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Користувач</th>
-                    <th>Товари</th>
-                    <th>Сума</th>
-                    <th>Дата</th>
-                    <th>Статус</th>
-                </tr>
-            </thead>
-            <tbody id="admin-orders-list">
-                </tbody>
-        </table>
+    <div class="admin-wrap">
+        <a href="index.html" class="back-btn">← Повернутися в магазин</a>
+        
+        <div class="admin-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Панель керування замовленнями</h2>
+                <button onclick="loadOrders()" style="cursor:pointer; padding: 8px 15px; border-radius: 10px; border: 1px solid #ddd;">Оновити дані</button>
+            </div>
+            
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Користувач (Email)</th>
+                        <th>Товари</th>
+                        <th>Сума</th>
+                        <th>Дата</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-list">
+                    </tbody>
+            </table>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const SB_URL = 'https://yoxieszknznklpvnyvui.supabase.co';
         const SB_KEY = 'sb_publishable_ZLbve8ADHIqc48h2YOQQUw_z8vox0s9';
-        const sbClient = supabase.createClient(SB_URL, SB_KEY);
+        const sb = supabase.createClient(SB_URL, SB_KEY);
 
-        async function loadAllOrders() {
-            const { data, error } = await sbClient.from('orders').select('*').order('created_at', { ascending: false });
-            const list = document.getElementById('admin-orders-list');
-            
-            if (error) { list.innerHTML = 'Помилка доступу'; return; }
-            
+        async function loadOrders() {
+            const list = document.getElementById('admin-list');
+            list.innerHTML = '<tr><td colspan="5">Завантаження...</td></tr>';
+
+            const { data, error } = await sb
+                .from('orders')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                list.innerHTML = '<tr><td colspan="5" style="color:red;">Помилка: ' + error.message + '</td></tr>';
+                return;
+            }
+
+            if (data.length === 0) {
+                list.innerHTML = '<tr><td colspan="5">Замовлень поки немає.</td></tr>';
+                return;
+            }
+
             list.innerHTML = data.map(o => `
                 <tr>
-                    <td>#${o.id.slice(0,5)}</td>
-                    <td>${o.user_email}</td>
+                    <td style="font-family: monospace; font-size: 12px; color: #999;">#${o.id.slice(0,8)}</td>
+                    <td><b>${o.user_email}</b></td>
                     <td>${o.items_names}</td>
-                    <td><b>${o.total_price} грн</b></td>
-                    <td>${new Date(o.created_at).toLocaleDateString()}</td>
-                    <td><span class="status-pill">Нове</span></td>
+                    <td><span class="price-tag">${o.total_price} грн</span></td>
+                    <td>${new Date(o.created_at).toLocaleString('uk-UA')}</td>
                 </tr>
             `).join('');
         }
-        loadAllOrders();
+
+        window.onload = loadOrders;
     </script>
 </body>
 </html>
