@@ -9,12 +9,10 @@ window.onload = () => {
     sbClient = supabase.createClient(SB_URL, SB_KEY);
     checkUser();
 
- const banner = document.getElementById('joke-banner');
+    const banner = document.getElementById('joke-banner');
     if (banner) {
         setTimeout(() => {
-            banner.style.transition = 'opacity 1s';
-            banner.style.opacity = '0';
-            setTimeout(() => banner.remove(), 1000);
+            banner.classList.add('hidden');
         }, 5000);
     }
 };
@@ -102,8 +100,7 @@ function checkout() {
 
 function closeModal() {
     document.getElementById('details-modal').classList.remove('active');
-    const authModal = document.getElementById('auth-modal');
-    if(authModal) authModal.style.display = 'none';
+    document.getElementById('auth-modal').style.display = 'none';
     if (!document.getElementById('cart-sidebar').classList.contains('active')) {
         overlay.classList.remove('active');
     }
@@ -118,15 +115,13 @@ function toggleCart() {
 overlay.onclick = () => {
     document.getElementById('details-modal').classList.remove('active');
     document.getElementById('cart-sidebar').classList.remove('active');
-    const authModal = document.getElementById('auth-modal');
-    if(authModal) authModal.style.display = 'none';
+    document.getElementById('auth-modal').style.display = 'none';
     overlay.classList.remove('active');
 };
 
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.onclick = () => {
-        const activeBtn = document.querySelector('.filter-btn.active');
-        if (activeBtn) activeBtn.classList.remove('active');
+        document.querySelector('.filter-btn.active').classList.remove('active');
         btn.classList.add('active');
         
         const genre = btn.dataset.genre;
@@ -145,18 +140,11 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 async function checkUser() {
     const { data: { user } } = await sbClient.auth.getUser();
     if (user) {
-        const authSec = document.getElementById('auth-section');
-        if(authSec) authSec.style.display = 'none';
-        
-        const logoutBtn = document.getElementById('logout-btn');
-        if(logoutBtn) logoutBtn.style.display = 'block';
-        
-        const historyBtn = document.getElementById('history-btn');
-        if(historyBtn) historyBtn.style.display = 'block';
-
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('logout-btn').style.display = 'block';
+        document.getElementById('history-btn').style.display = 'block';
         if (user.email === OWNER_EMAIL) {
-            const adminBtn = document.getElementById('admin-panel-btn');
-            if (adminBtn) adminBtn.style.display = 'block';
+            document.getElementById('admin-panel-btn').style.display = 'block';
         }
     }
 }
@@ -172,14 +160,14 @@ async function signIn() {
     const e = document.getElementById('auth-email').value;
     const p = document.getElementById('auth-password').value;
     const { error } = await sbClient.auth.signInWithPassword({ email: e, password: p });
-    if (error) alert("Помилка: " + error.message); else location.reload();
+    if (error) alert(error.message); else location.reload();
 }
 
 async function signUp() {
     const e = document.getElementById('auth-email').value;
     const p = document.getElementById('auth-password').value;
     const { error } = await sbClient.auth.signUp({ email: e, password: p });
-    if (error) alert("Помилка: " + error.message); else alert("Перевірте пошту!");
+    if (error) alert(error.message); else alert("Перевірте пошту!");
 }
 
 async function signOut() {
@@ -187,5 +175,4 @@ async function signOut() {
     location.reload();
 }
 
-const cartBtn = document.getElementById('cart-btn');
-if (cartBtn) cartBtn.onclick = toggleCart;
+document.getElementById('cart-btn').onclick = toggleCart;
