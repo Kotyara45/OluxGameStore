@@ -1,4 +1,3 @@
-
 <html>
 <head>
     <meta charset="UTF-8">
@@ -21,6 +20,9 @@
                 <small>СПЕЦ. ПРОПОЗИЦІЯ</small>
             </a>
             
+            <button id="auth-btn" onclick="toggleAuthModal()" style="padding: 5px 15px; border-radius: 8px; border: 1px solid gold; cursor: pointer; background: none; color: white;">Вхід</button>
+            <button id="history-btn" onclick="toggleHistoryModal()" style="display: none; padding: 5px 15px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: none; color: white;">Історія</button>
+
             <div id="cart-btn" class="cart-trigger">
                 🛒 Кошик <span id="cart-count">0</span>
             </div>
@@ -156,8 +158,7 @@
             <h2>Ваш кошик</h2>
             <span style="cursor: pointer; font-size: 30px;" onclick="toggleCart()">&times;</span>
         </div>
-        <div id="cart-items" class="cart-list">
-            </div>
+        <div id="cart-items" class="cart-list"></div>
         <div class="sidebar-footer">
             <div class="total-row">
                 <span>Разом:</span>
@@ -169,38 +170,50 @@
 
     <div id="details-modal" class="modal">
         <div class="modal-content">
-            <div id="modal-data" class="modal-layout">
-                </div>
+            <div id="modal-data" class="modal-layout"></div>
         </div>
     </div>
 
     <div id="overlay" class="overlay"></div>
 
-    <script src="script.js"></script>
-    
     <div class="support-chat" style="position: fixed; bottom: 20px; right: 20px; width: 300px; background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 4000; overflow: hidden;">
-    <div class="chat-header" onclick="toggleChat()" style="background: var(--brown); color: white; padding: 15px; cursor: pointer; text-align: center; font-weight: bold;">Допомога Olux</div>
-    <div id="chat-body" style="display: none; height: 350px; flex-direction: column;">
-        <div id="chat-messages" style="flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #fff; font-size: 14px;"></div>
-        <div class="chat-input" style="display: flex; padding: 10px; border-top: 1px solid #eee;">
-            <input type="text" id="user-msg" placeholder="Ваше питання..." style="flex: 1; border: none; outline: none; padding: 5px;">
-            <button onclick="sendSupportMessage()" style="background: none; border: none; cursor: pointer; font-size: 20px; color: var(--brown);">➔</button>
+        <div class="chat-header" onclick="toggleChat()" style="background: var(--brown); color: white; padding: 15px; cursor: pointer; text-align: center; font-weight: bold;">Допомога Olux</div>
+        <div id="chat-body" style="display: none; height: 350px; flex-direction: column;">
+            <div id="chat-messages" style="flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #fff; font-size: 14px;"></div>
+            <div class="chat-input" style="display: flex; padding: 10px; border-top: 1px solid #eee;">
+                <input type="text" id="user-msg" placeholder="Ваше питання..." style="flex: 1; border: none; outline: none; padding: 5px;">
+                <button onclick="sendSupportMessage()" style="background: none; border: none; cursor: pointer; font-size: 20px; color: var(--brown);">➔</button>
+            </div>
         </div>
     </div>
-</div>
 
-<div id="admin-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 30px; z-index: 5000; width: 350px; box-shadow: 0 0 50px rgba(0,0,0,0.3);">
-    <h2 style="color:var(--brown); margin-top: 0;">Нова гра</h2>
-    <input type="text" id="adm-title" placeholder="Назва гри" style="width:100%; margin-bottom:10px; padding:10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
-    <input type="number" id="adm-price" placeholder="Ціна" style="width:100%; margin-bottom:10px; padding:10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
-    <input type="text" id="adm-img" placeholder="URL картинки" style="width:100%; margin-bottom:10px; padding:10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
-    <textarea id="adm-desc" placeholder="Опис" style="width:100%; margin-bottom:10px; padding:10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; height: 80px;"></textarea>
-    <button onclick="addNewGame()" style="width: 100%; background: var(--gold); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold;">ЗБЕРЕГТИ В БД</button>
-    <button onclick="toggleAdminPanel()" style="width: 100%; background: #eee; border: none; padding: 10px; margin-top: 10px; border-radius: 10px; cursor: pointer;">Закрити</button>
-</div>
+    <div id="admin-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 30px; z-index: 5000; width: 350px; box-shadow: 0 0 50px rgba(0,0,0,0.3);">
+        <h2 style="color:var(--brown); margin-top: 0;">Нова гра</h2>
+        <input type="text" id="adm-title" placeholder="Назва гри" style="width:100%; margin-bottom:10px; padding:10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+        <input type="number" id="adm-price" placeholder="Ціна" style="width:100%; margin-bottom:10px; padding:10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+        <input type="text" id="adm-img" placeholder="URL картинки" style="width:100%; margin-bottom:10px; padding:10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+        <textarea id="adm-desc" placeholder="Опис" style="width:100%; margin-bottom:10px; padding:10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; height: 80px;"></textarea>
+        <button onclick="addNewGame()" style="width: 100%; background: #d4af37; color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold;">ЗБЕРЕГТИ В БД</button>
+        <button onclick="toggleAdminPanel()" style="width: 100%; background: #eee; border: none; padding: 10px; margin-top: 10px; border-radius: 10px; cursor: pointer;">Закрити</button>
+    </div>
 
-<div onclick="toggleAdminPanel()" style="position:fixed; bottom:10px; left:10px; opacity:0.1; cursor:pointer; font-size:20px; z-index: 5001;">⚙️</div>
+    <div id="auth-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 20px; z-index: 6000; width: 300px; box-shadow: 0 0 30px rgba(0,0,0,0.5);">
+        <h3 style="margin-top:0; color: #333;">Вхід / Реєстрація</h3>
+        <input type="email" id="auth-email" placeholder="Email" style="width:100%; margin-bottom:10px; padding:8px; border:1px solid #ddd; border-radius:5px;">
+        <input type="password" id="auth-password" placeholder="Пароль" style="width:100%; margin-bottom:10px; padding:8px; border:1px solid #ddd; border-radius:5px;">
+        <button onclick="signIn()" style="width:100%; background: #d4af37; border:none; padding:10px; margin-bottom:5px; cursor:pointer; font-weight:bold; color: white; border-radius: 5px;">Увійти</button>
+        <button onclick="signUp()" style="width:100%; background: #eee; border:none; padding:10px; cursor:pointer; border-radius: 5px;">Створити акаунт</button>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <div id="history-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 20px; z-index: 6000; width: 320px; box-shadow: 0 0 30px rgba(0,0,0,0.5); max-height: 70vh; overflow-y: auto;">
+        <h3 style="margin-top:0; color: #333;">Мої покупки</h3>
+        <div id="purchase-list" style="color: #666; font-size: 14px; margin-bottom: 15px;"></div>
+        <button onclick="toggleHistoryModal()" style="width:100%; background: #eee; border:none; padding:10px; cursor:pointer; border-radius: 5px;">Закрити</button>
+    </div>
+
+    <div onclick="toggleAdminPanel()" style="position:fixed; bottom:10px; left:10px; opacity:0.1; cursor:pointer; font-size:20px; z-index: 5001;">⚙️</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
 </body>
 </html>
