@@ -37,9 +37,7 @@ async function updateAuthUI() {
 
         if (roleData && adminBtn) {
             adminBtn.style.display = 'block';
-            if (roleData.role === 'owner') adminBtn.innerText = "Власник 👑";
-            else if (roleData.role === 'admin') adminBtn.innerText = "Адмін 🛠";
-            else adminBtn.innerText = "Модер 🛡";
+            adminBtn.innerText = roleData.role === 'owner' ? "Власник 👑" : (roleData.role === 'admin' ? "Адмін 🛠" : "Модер 🛡");
         }
     } else {
         if (authSect) authSect.style.display = 'block';
@@ -77,7 +75,7 @@ function openDetails(btn) {
         <div class="modal-info-side">
             <span class="close-btn-large" onclick="closeModal()">&times;</span>
             <h2 style="color:black;">${d.title}</h2>
-            <div style="color:#d4af37; font-size:24px; font-weight:bold; margin: 10px 0;">${d.price} грн</div>
+            <div style="color:#d4af37; font-size:24px; font-weight:bold; margin: 10px 0;">${d.price || 0} грн</div>
             <p style="color:#333;">${d.desc}</p>
             <div style="background:#f4f4f4; padding:10px; border-radius:10px; margin: 15px 0; color:black;">
                 <p><b>Розробник:</b> ${d.author}</p>
@@ -125,14 +123,16 @@ async function toggleHistoryModal() {
 
 function addToCart(btn) {
     const d = btn.closest('.game-card').dataset;
+    const price = parseInt(d.price) || 0;
     if (cart.find(i => i.title === d.title)) return alert("Вже у кошику!");
-    cart.push({ title: d.title, price: parseInt(d.price), img: d.img });
+    cart.push({ title: d.title, price: price, img: d.img });
     updateUI();
 }
 
 function addToCartDirect(title, price, img) {
+    const p = parseInt(price) || 0;
     if (cart.find(i => i.title === title)) return alert("Вже у кошику!");
-    cart.push({ title, price, img });
+    cart.push({ title, price: p, img });
     updateUI();
     closeModal();
 }
