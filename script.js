@@ -1,12 +1,6 @@
 const SB_URL = 'https://yoxieszknznklpvnyvui.supabase.co';
 const SB_KEY = 'sb_publishable_ZLbve8ADHIqc48h2YOQQUw_z8vox0s9';
 
-const ROLES = {
-    OWNER: 'nazarivanyuk562@gmail.com',
-    ADMINS: ['admin@olux.com'],
-    MODERS: ['moder@olux.com']
-};
-
 let sbClient;
 let cart = [];
 let currentUser = null;
@@ -14,17 +8,17 @@ let currentUser = null;
 window.onload = async () => {
     sbClient = supabase.createClient(SB_URL, SB_KEY);
 
-    sbClient.auth.onAuthStateChange((event, session) => {
+    sbClient.auth.onAuthStateChange(async (event, session) => {
         currentUser = session ? session.user : null;
-        updateAuthUI();
+        await updateAuthUI();
     });
 
     const { data: { session } } = await sbClient.auth.getSession();
     currentUser = session ? session.user : null;
-    updateAuthUI();
+    await updateAuthUI();
 };
 
-function updateAuthUI() {
+async function updateAuthUI() {
     const authSect = document.getElementById('auth-section');
     const logoutBtn = document.getElementById('logout-btn');
     const histBtn = document.getElementById('history-btn');
@@ -35,15 +29,17 @@ function updateAuthUI() {
         if (logoutBtn) logoutBtn.style.display = 'block';
         if (histBtn) histBtn.style.display = 'block';
 
-        const isOwner = currentUser.email === ROLES.OWNER;
-        const isAdmin = ROLES.ADMINS.includes(currentUser.email);
-        const isModer = ROLES.MODERS.includes(currentUser.email);
+        const { data: roleData } = await sbClient
+            .from('admin_status')
+            .select('role')
+            .eq('user_email', currentUser.email)
+            .maybeSingle();
 
-        if (isOwner || isAdmin || isModer) {
-            if (adminBtn) {
-                adminBtn.style.display = 'block';
-                adminBtn.innerText = isOwner ? "Власник 👑" : (isAdmin ? "Адмін 🛠" : "Модер 🛡");
-            }
+        if (roleData && adminBtn) {
+            adminBtn.style.display = 'block';
+            if (roleData.role === 'owner') adminBtn.innerText = "Власник 👑";
+            else if (roleData.role === 'admin') adminBtn.innerText = "Адмін 🛠";
+            else adminBtn.innerText = "Модер 🛡";
         }
     } else {
         if (authSect) authSect.style.display = 'block';
@@ -95,38 +91,21 @@ function openDetails(btn) {
 }
 
 function toggleAdminPanel() {
-    if (!currentUser) return;
     const modal = document.getElementById('admin-modal');
-    const tabs = document.getElementById('admin-tabs');
-    if (!modal || !tabs) return;
-    tabs.innerHTML = '';
     modal.classList.add('active');
     document.getElementById('overlay').classList.add('active');
-    const email = currentUser.email;
-    if (email === ROLES.OWNER || ROLES.ADMINS.includes(email) || ROLES.MODERS.includes(email))
-        tabs.innerHTML += `<button class="filter-btn" onclick="loadAdminSection('support')">Підтримка</button>`;
-    if (email === ROLES.OWNER || ROLES.ADMINS.includes(email)) {
-        tabs.innerHTML += `<button class="filter-btn" onclick="loadAdminSection('orders')">Замовлення</button>`;
-        tabs.innerHTML += `<button class="filter-btn" onclick="loadAdminSection('add_game')">Додати гру</button>`;
-    }
-    if (email === ROLES.OWNER)
-        tabs.innerHTML += `<button class="filter-btn" style="background:gold; color:black;" onclick="loadAdminSection('staff')">Штат</button>`;
-    loadAdminSection('support');
+    loadAdminSection('orders');
 }
 
 async function loadAdminSection(section) {
     const content = document.getElementById('admin-content');
-    if (!content) return;
     content.innerHTML = '<p>Завантаження...</p>';
     if (section === 'orders') {
         const { data } = await sbClient.from('orders').select('*').order('created_at', { ascending: false });
-        content.innerHTML = `<h3 style="color:black;">Замовлення</h3>` + (data || []).map(o => `<div style="padding:10px; border-bottom:1px solid #ddd; color:black;"><b>${o.user_email}</b>: ${o.total_price} грн<br><small>${o.items_names}</small></div>`).join('');
-    } else if (section === 'add_game') {
-        content.innerHTML = `<h3 style="color:black;">Додати гру</h3><input type="text" id="n-t" placeholder="Назва" style="width:100%; padding:8px; margin-bottom:10px;"><button class="buy-btn" onclick="alert('Збережено!')">Зберегти</button>`;
-    } else if (section === 'staff') {
-        content.innerHTML = `<h3 style="color:black;">Штат</h3><p style="color:black;">Власник: ${ROLES.OWNER}</p>`;
-    } else {
-        content.innerHTML = `<h3 style="color:black;">Інформація</h3><p style="color:black;">Даних немає.</p>`;
+        content.innerHTML = `<h3 style="color:black;">Усі замовлення</h3>` + (data || []).map(o => `
+            <div style="padding:10px; border-bottom:1px solid #ddd; color:black;">
+                <b>${o.user_email}</b>: ${o.total_price} грн<br><small>${o.items_names}</small>
+            </div>`).join('');
     }
 }
 
@@ -134,11 +113,14 @@ async function toggleHistoryModal() {
     if (!currentUser) return;
     const modal = document.getElementById('history-modal');
     const list = document.getElementById('history-list');
-    if (!modal || !list) return;
     modal.style.display = 'block';
     document.getElementById('overlay').classList.add('active');
+    list.innerHTML = '<p style="color:black;">Завантаження...</p>';
     const { data } = await sbClient.from('orders').select('*').eq('user_email', currentUser.email).order('created_at', { ascending: false });
-    list.innerHTML = data && data.length ? data.map(o => `<div style="padding:10px; border-bottom:1px solid #eee; color:black;"><b>#${o.id.toString().slice(0, 6)}</b> - ${o.total_price} грн<br><small>${o.items_names}</small></div>`).join('') : '<p style="color:black;">Історія порожня</p>';
+    list.innerHTML = data && data.length ? data.map(o => `
+        <div style="padding:10px; border-bottom:1px solid #eee; color:black;">
+            <b>#${o.id.toString().slice(0,8)}</b> - ${o.total_price} грн<br><small>${o.items_names}</small>
+        </div>`).join('') : '<p style="color:black;">Історія порожня</p>';
 }
 
 function addToCart(btn) {
@@ -167,7 +149,7 @@ function updateUI() {
             return `<div class="cart-item" style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
                 <img src="${item.img}" width="40" height="50" style="object-fit:cover; border-radius:5px;">
                 <div style="flex:1; color:black;"><b>${item.title}</b><br>${item.price} грн</div>
-                <span onclick="removeFromCart(${i})" style="color:red; cursor:pointer; font-weight:bold; padding:5px;">✕</span>
+                <span onclick="removeFromCart(${i})" style="color:red; cursor:pointer;">✕</span>
             </div>`;
         }).join('') : '<p style="text-align:center; color:gray; padding-top:20px;">Порожньо</p>';
     }
@@ -180,24 +162,22 @@ function removeFromCart(i) {
 }
 
 async function checkout() {
-    if (!currentUser) { alert("Увійдіть в акаунт!"); toggleAuthModal(); return; }
+    if (!currentUser) { alert("Увійдіть в акаунт!"); return; }
     if (!cart.length) return;
     const items = cart.map(i => i.title).join(', ');
     const total = cart.reduce((s, i) => s + i.price, 0);
-    const { error } = await sbClient.from('orders').insert([{ user_email: currentUser.email, items_names: items, total_price: total }]);
+    await sbClient.from('orders').insert([{ user_email: currentUser.email, items_names: items, total_price: total }]);
     window.location.href = 'https://donatello.to/OluxGameStore';
 }
 
 function toggleCart() {
     const s = document.getElementById('cart-sidebar');
-    if (!s) return;
     const active = s.classList.toggle('active');
     document.getElementById('overlay').classList.toggle('active', active);
 }
 
 function toggleAuthModal() {
     const m = document.getElementById('auth-modal');
-    if (!m) return;
     const isDisp = m.style.display === 'block';
     m.style.display = isDisp ? 'none' : 'block';
     document.getElementById('overlay').classList.toggle('active', !isDisp);
@@ -206,16 +186,14 @@ function toggleAuthModal() {
 function closeModal() {
     document.querySelectorAll('.modal, .sidebar').forEach(m => m.classList.remove('active'));
     document.querySelectorAll('.modal-small').forEach(m => m.style.display = 'none');
-    const ov = document.getElementById('overlay');
-    if (ov) ov.classList.remove('active');
+    document.getElementById('overlay').classList.remove('active');
 }
 
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.onclick = () => {
         const genre = btn.dataset.genre;
         if (!genre) return;
-        const activeBtn = document.querySelector('.filter-btn.active');
-        if (activeBtn) activeBtn.classList.remove('active');
+        document.querySelector('.filter-btn.active')?.classList.remove('active');
         btn.classList.add('active');
         document.querySelectorAll('.game-card').forEach(card => {
             card.style.display = (genre === 'all' || card.dataset.genre === genre) ? 'block' : 'none';
