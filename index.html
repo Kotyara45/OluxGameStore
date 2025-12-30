@@ -177,5 +177,30 @@
     <div id="overlay" class="overlay"></div>
 
     <script src="script.js"></script>
+    
+    <div class="support-chat" style="position: fixed; bottom: 20px; right: 20px; width: 300px; background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 4000; overflow: hidden;">
+    <div class="chat-header" onclick="toggleChat()" style="background: var(--brown); color: white; padding: 15px; cursor: pointer; text-align: center; font-weight: bold;">Допомога Olux</div>
+    <div id="chat-body" style="display: none; height: 350px; flex-direction: column;">
+        <div id="chat-messages" style="flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #fff; font-size: 14px;"></div>
+        <div class="chat-input" style="display: flex; padding: 10px; border-top: 1px solid #eee;">
+            <input type="text" id="user-msg" placeholder="Ваше питання..." style="flex: 1; border: none; outline: none; padding: 5px;">
+            <button onclick="sendSupportMessage()" style="background: none; border: none; cursor: pointer; font-size: 20px; color: var(--brown);">➔</button>
+        </div>
+    </div>
+</div>
+
+<div id="admin-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 30px; z-index: 5000; width: 350px; box-shadow: 0 0 50px rgba(0,0,0,0.3);">
+    <h2 style="color:var(--brown); margin-top: 0;">Нова гра</h2>
+    <input type="text" id="adm-title" placeholder="Назва гри" style="width:100%; margin-bottom:10px; padding:10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+    <input type="number" id="adm-price" placeholder="Ціна" style="width:100%; margin-bottom:10px; padding:10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+    <input type="text" id="adm-img" placeholder="URL картинки" style="width:100%; margin-bottom:10px; padding:10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+    <textarea id="adm-desc" placeholder="Опис" style="width:100%; margin-bottom:10px; padding:10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; height: 80px;"></textarea>
+    <button onclick="addNewGame()" style="width: 100%; background: var(--gold); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold;">ЗБЕРЕГТИ В БД</button>
+    <button onclick="toggleAdminPanel()" style="width: 100%; background: #eee; border: none; padding: 10px; margin-top: 10px; border-radius: 10px; cursor: pointer;">Закрити</button>
+</div>
+
+<div onclick="toggleAdminPanel()" style="position:fixed; bottom:10px; left:10px; opacity:0.1; cursor:pointer; font-size:20px; z-index: 5001;">⚙️</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 </html>
