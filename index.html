@@ -1,45 +1,132 @@
-<html">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OluxGameStore</title>
+    <title>OluxGameStore — Магазин Ігор</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+    <div id="joke-banner" class="joke-banner">
+        Це фейк сайт — натискаючи «ОФОРМИТИ», ви просто тестуєте систему.
+    </div>
+
     <header class="header-top">
         <h1 onclick="window.location.href='index.html'" style="cursor:pointer;">OluxGameStore</h1>
-        <nav style="display: flex; gap: 10px; align-items: center;">
-            <a href="catalog2.html" style="color: white; text-decoration: none; font-weight: bold;">Каталог 2</a>
+        <nav style="display: flex; gap: 15px; align-items: center;">
+            <a href="gta6.html" class="gta6-nav-btn">
+                <span>GTA VI</span>
+                <small>СПЕЦ. ПРОПОЗИЦІЯ</small>
+            </a>
+            
             <div id="auth-section">
-                <button onclick="toggleAuthModal()" style="padding: 8px 15px; border-radius: 8px; border: 1px solid gold; cursor: pointer; background: none; color: white;">Вхід</button>
+                <button id="auth-btn" onclick="toggleAuthModal()" style="padding: 8px 15px; border-radius: 8px; border: 1px solid gold; cursor: pointer; background: none; color: white;">Вхід / Реєстрація</button>
             </div>
+
             <button id="history-btn" onclick="toggleHistoryModal()" style="display: none; padding: 8px 15px; border-radius: 8px; border: 1px solid #444; cursor: pointer; background: #222; color: white;">Історія</button>
             <button id="admin-panel-btn" onclick="toggleAdminPanel()" style="display: none; padding: 8px 15px; border-radius: 8px; border: 1px solid gold; cursor: pointer; background: gold; color: black; font-weight: bold;">Адмін Панель</button>
             <button id="logout-btn" onclick="signOut()" style="display: none; background: none; border: none; color: #ff4444; cursor: pointer; font-size: 20px;">➔</button>
+
             <div id="cart-btn" class="cart-trigger">🛒 <span id="cart-count">0</span></div>
         </nav>
     </header>
 
+    <div class="filters">
+        <button class="filter-btn active" data-genre="all">Всі ігри</button>
+        <button class="filter-btn" data-genre="Action">Action</button>
+        <button class="filter-btn" data-genre="RPG">RPG</button>
+        <button class="filter-btn" data-genre="Shooter">Shooter</button>
+        <button class="filter-btn" data-genre="Simulator">Simulator</button>
+    </div>
+
     <main id="catalog-grid" class="catalog">
-        <div class="game-card" data-genre="Action" data-title="GTA V" data-price="499" data-author="Rockstar Games" data-year="2013" data-specs="i5-3470, 8GB RAM, GTX 660" data-img="gta5.jpg" data-desc="Легендарний відкритий світ злочинного Лос-Сантоса.">
+        <div class="game-card" data-genre="Action" data-title="GTA V" data-price="499" data-img="gta5.jpg" data-desc="Лос-Сантос чекає.">
             <div class="card-img" style="background-image: url('gta5.jpg')"></div>
             <h3>GTA V</h3><p class="price">499 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="RPG" data-title="Cyberpunk 2077" data-price="1099" data-author="CD Projekt Red" data-year="2020" data-specs="i7-6700, 12GB RAM, GTX 1060" data-img="cyberpunk2077.jpg" data-desc="Майбутнє Найт-Сіті чекає на тебе.">
+
+        <div class="game-card" data-genre="RPG" data-title="Red Dead Redemption 2" data-price="899" data-img="rdr2.jpg" data-desc="Дикий Захід.">
+            <div class="card-img" style="background-image: url('rdr2.jpg')"></div>
+            <h3>RDR 2</h3><p class="price">899 грн</p>
+            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
+        </div>
+
+        <div class="game-card" data-genre="RPG" data-title="Cyberpunk 2077" data-price="1099" data-img="cyberpunk2077.jpg" data-desc="Найт-Сіті.">
             <div class="card-img" style="background-image: url('cyberpunk2077.jpg')"></div>
             <h3>Cyberpunk 2077</h3><p class="price">1099 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="RPG" data-title="The Witcher 3" data-price="399" data-author="CD Projekt Red" data-year="2015" data-specs="i7-3770, 8GB RAM, GTX 770" data-img="witcher3.jpg" data-desc="Легендарні пригоди Геральта з Рівії.">
+
+        <div class="game-card" data-genre="RPG" data-title="Elden Ring" data-price="1399" data-img="eldenring.jpg" data-desc="Лорд Елден.">
+            <div class="card-img" style="background-image: url('eldenring.jpg')"></div>
+            <h3>Elden Ring</h3><p class="price">1399 грн</p>
+            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
+        </div>
+
+        <div class="game-card" data-genre="RPG" data-title="The Witcher 3" data-price="399" data-img="witcher3.jpg" data-desc="Геральт.">
             <div class="card-img" style="background-image: url('witcher3.jpg')"></div>
             <h3>Witcher 3</h3><p class="price">399 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
-        <div class="game-card" data-genre="Shooter" data-title="COD MW III" data-price="2199" data-author="Activision" data-year="2023" data-specs="i5-6600, 12GB RAM, GTX 960" data-img="codmw3.jpg" data-desc="Найкращий шутер сезону.">
+
+        <div class="game-card" data-genre="RPG" data-title="Baldur’s Gate 3" data-price="1299" data-img="baldursgate3.jpg" data-desc="Пригоди D&D.">
+            <div class="card-img" style="background-image: url('baldursgate3.jpg')"></div>
+            <h3>Baldur’s Gate 3</h3><p class="price">1299 грн</p>
+            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
+        </div>
+
+        <div class="game-card" data-genre="RPG" data-title="Hogwarts Legacy" data-price="1199" data-img="hogwarts.jpg" data-desc="Світ магії.">
+            <div class="card-img" style="background-image: url('hogwarts.jpg')"></div>
+            <h3>Hogwarts Legacy</h3><p class="price">1199 грн</p>
+            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
+        </div>
+
+        <div class="game-card" data-genre="Simulator" data-title="Forza Horizon 5" data-price="999" data-img="forzahorizon5.jpg" data-desc="Мексиканські гонки.">
+            <div class="card-img" style="background-image: url('forzahorizon5.jpg')"></div>
+            <h3>Forza Horizon 5</h3><p class="price">999 грн</p>
+            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
+        </div>
+
+        <div class="game-card" data-genre="Action" data-title="AC Mirage" data-price="1299" data-img="acmirage.jpg" data-desc="Багдад.">
+            <div class="card-img" style="background-image: url('acmirage.jpg')"></div>
+            <h3>AC Mirage</h3><p class="price">1299 грн</p>
+            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
+        </div>
+
+        <div class="game-card" data-genre="Action" data-title="Spider-Man" data-price="899" data-img="spidermanremastered.jpg" data-desc="Нью-Йорк.">
+            <div class="card-img" style="background-image: url('spidermanremastered.jpg')"></div>
+            <h3>Spider-Man</h3><p class="price">899 грн</p>
+            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
+        </div>
+
+        <div class="game-card" data-genre="Shooter" data-title="Battlefield 2042" data-price="599" data-img="bf2042.jpg" data-desc="Війна майбутнього.">
+            <div class="card-img" style="background-image: url('bf2042.jpg')"></div>
+            <h3>Battlefield 2042</h3><p class="price">599 грн</p>
+            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
+        </div>
+
+        <div class="game-card" data-genre="Shooter" data-title="COD MW III" data-price="2199" data-img="codmw3.jpg" data-desc="Екшн-шутер.">
             <div class="card-img" style="background-image: url('codmw3.jpg')"></div>
             <h3>COD MW III</h3><p class="price">2199 грн</p>
+            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
+        </div>
+
+        <div class="game-card" data-genre="Simulator" data-title="ETS 2" data-price="299" data-img="ets2.jpg" data-desc="Вантажівки Європи.">
+            <div class="card-img" style="background-image: url('ets2.jpg')"></div>
+            <h3>ETS 2</h3><p class="price">299 грн</p>
+            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
+        </div>
+
+        <div class="game-card" data-genre="Action" data-title="Sekiro" data-price="799" data-img="sekiro.jpg" data-desc="Самураї.">
+            <div class="card-img" style="background-image: url('sekiro.jpg')"></div>
+            <h3>Sekiro</h3><p class="price">799 грн</p>
+            <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
+        </div>
+
+        <div class="game-card" data-genre="Action" data-title="The Last of Us Part I" data-price="1499" data-img="tlou1.jpg" data-desc="Постапокаліпсис.">
+            <div class="card-img" style="background-image: url('tlou1.jpg')"></div>
+            <h3>TLOU Part I</h3><p class="price">1499 грн</p>
             <div class="btn-group"><button class="info-btn" onclick="openDetails(this)">Деталі</button><button class="buy-btn" onclick="addToCart(this)">Купити</button></div>
         </div>
     </main>
@@ -61,46 +148,45 @@
         </div>
     </footer>
 
-    <div id="admin-modal" class="modal">
-        <div class="modal-content" style="max-width: 450px; background: white; color: black; padding: 25px;">
-            <span class="close-btn-large" onclick="toggleAdminPanel()">&times;</span>
-            <h2 style="text-align: center; color: #d4af37;">Панель Керування</h2>
-            <div id="owner-tools" style="display: none; background: #fff9e6; padding: 15px; border-radius: 12px; border: 1px solid gold; margin-bottom: 15px;">
-                <h4>👑 Власник: Ролі</h4>
-                <input type="email" id="role-email" placeholder="Email" style="width:100%; padding:8px; margin-bottom:10px;">
-                <button onclick="assignRole('admin')" style="background: black; color: white; padding: 8px; border-radius: 5px; cursor: pointer;">+ Адмін</button>
-                <button onclick="assignRole('mod')" style="background: #555; color: white; padding: 8px; border-radius: 5px; cursor: pointer;">+ Мод</button>
-            </div>
-            <div id="admin-tools" style="display: none;">
-                <h4>🎮 Додати гру</h4>
-                <input type="text" id="adm-title" placeholder="Назва" style="width:100%; margin-bottom:5px;">
-                <input type="number" id="adm-price" placeholder="Ціна" style="width:100%; margin-bottom:5px;">
-                <button onclick="addNewGame()" style="width:100%; background: #28a745; color: white; padding: 10px; border: none; cursor: pointer;">Додати в БД</button>
-            </div>
-        </div>
-    </div>
-
     <div id="auth-modal" class="modal">
-        <div class="modal-content" style="max-width: 300px; background: white; color: black; padding: 20px;">
-            <h3>Вхід</h3>
-            <input type="email" id="auth-email" placeholder="Email" style="width:100%; margin-bottom:10px;">
-            <input type="password" id="auth-password" placeholder="Пароль" style="width:100%; margin-bottom:10px;">
-            <button onclick="signIn()" style="width:100%; background: gold; padding: 10px; cursor: pointer;">Увійти</button>
-            <button onclick="signUp()" style="width:100%; margin-top: 5px; cursor: pointer;">Реєстрація</button>
+        <div class="modal-content" style="max-width: 300px; background: white; color: black; padding: 25px; border-radius: 20px;">
+            <h3 style="margin-top:0;">Вхід / Реєстрація</h3>
+            <input type="email" id="auth-email" placeholder="Email" style="width:100%; margin-bottom:10px; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <input type="password" id="auth-password" placeholder="Пароль" style="width:100%; margin-bottom:15px; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            
+            <button onclick="signIn()" style="width:100%; background: #d4af37; border:none; padding:12px; margin-bottom:10px; cursor:pointer; font-weight:bold; color: white; border-radius: 8px;">УВІЙТИ</button>
+            <button onclick="signUp()" style="width:100%; background: #eee; border:none; padding:12px; cursor:pointer; font-weight:bold; border-radius: 8px;">СТВОРИТИ АКАУНТ</button>
+            
+            <p onclick="toggleAuthModal()" style="text-align:center; cursor:pointer; font-size:12px; color:#666; margin-top:15px;">Закрити</p>
         </div>
     </div>
 
-    <div id="cart-sidebar" class="sidebar">
-        <div class="sidebar-header"><h2>Кошик</h2><span onclick="toggleCart()" style="cursor:pointer; font-size:30px;">&times;</span></div>
-        <div id="cart-items"></div>
-        <div class="sidebar-footer">
-            <h3>Разом: <span id="cart-total">0</span> грн</h3>
-            <button onclick="checkout()" class="checkout-btn">ОФОРМИТИ</button>
+    <div id="admin-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px; background: white; color: black;">
+            <span class="close-btn-large" onclick="toggleAdminPanel()">&times;</span>
+            <h2 style="color: #d4af37;">Адмін Панель</h2>
+            <div id="owner-tools" style="display: none; background: #fff9e6; padding: 15px; border-radius: 12px; border: 1px solid gold; margin-bottom: 20px;">
+                <h4 style="margin:0 0 10px 0;">👑 Власник</h4>
+                <input type="email" id="role-email" placeholder="Email для ролі" style="width:100%; padding:8px; margin-bottom:10px;">
+                <button onclick="assignRole('admin')" style="background: black; color: white; padding: 8px 15px; border:none; border-radius: 5px; cursor:pointer;">+ Адмін</button>
+            </div>
+            <div id="admin-tools">
+                <h4 style="margin:0 0 10px 0;">🎮 Додати нову гру</h4>
+                <input type="text" id="adm-title" placeholder="Назва" style="width:100%; padding:10px; margin-bottom:8px;">
+                <input type="number" id="adm-price" placeholder="Ціна" style="width:100%; padding:10px; margin-bottom:8px;">
+                <button onclick="addNewGame()" style="width:100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">ОПУБЛІКУВАТИ</button>
+            </div>
         </div>
     </div>
 
     <div id="details-modal" class="modal"><div class="modal-content"><div id="modal-data" class="modal-layout"></div></div></div>
     <div id="overlay" class="overlay"></div>
+
+    <div id="cart-sidebar" class="sidebar">
+        <div class="sidebar-header"><h2>Кошик</h2><span onclick="toggleCart()" style="cursor:pointer; font-size:30px;">&times;</span></div>
+        <div id="cart-items"></div>
+        <div class="sidebar-footer"><h3>Разом: <span id="cart-total">0</span> грн</h3><button class="checkout-btn" onclick="checkout()">ОФОРМИТИ</button></div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
