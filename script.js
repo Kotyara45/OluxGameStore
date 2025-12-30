@@ -9,7 +9,7 @@ window.onload = () => {
     sbClient = supabase.createClient(SB_URL, SB_KEY);
     checkUser();
 
-    const banner = document.getElementById('joke-banner');
+ const banner = document.getElementById('joke-banner');
     if (banner) {
         setTimeout(() => {
             banner.style.transition = 'opacity 1s';
