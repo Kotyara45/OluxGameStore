@@ -129,3 +129,66 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 });
 
 document.getElementById('cart-btn').onclick = toggleCart;
+
+const SB_URL = 'https://yoxieszknznklpvnyvui.supabase.co';
+const SB_KEY = 'sb_publishable_ZLbve8ADHIqc48h2YOQQUw_z8vox0s9';
+const sbClient = supabase.createClient(SB_URL, SB_KEY);
+
+async function sendSupportMessage() {
+    const input = document.getElementById('user-msg');
+    const text = input.value.trim();
+    if(!text) return;
+
+    const msgContainer = document.getElementById('chat-messages');
+    msgContainer.innerHTML += `<div style="background: #eee; padding: 8px 12px; border-radius: 12px; align-self: flex-end; max-width: 80%; margin-bottom: 5px;">${text}</div>`;
+    input.value = '';
+
+    const { data } = await sbClient.from('admin_status').select('is_online').eq('id', 1).single();
+    
+    if(data && !data.is_online) {
+        setTimeout(() => {
+            msgContainer.innerHTML += `<div style="background: #ffebee; color: #c62828; padding: 8px; border-radius: 10px; text-align: center; font-size: 12px; margin-bottom: 5px;">Адміністрації та модераторів немає в мережі. Напишіть пізніше.</div>`;
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+        }, 1000);
+    } else {
+        await sbClient.from('support_messages').insert([{ message: text }]);
+    }
+    msgContainer.scrollTop = msgContainer.scrollHeight;
+}
+
+function toggleChat() {
+    const chatBody = document.getElementById('chat-body');
+    chatBody.style.display = (chatBody.style.display === 'none') ? 'flex' : 'none';
+}
+
+function toggleAdminPanel() {
+    const admModal = document.getElementById('admin-modal');
+    const isVisible = admModal.style.display === 'block';
+    admModal.style.display = isVisible ? 'none' : 'block';
+    overlay.classList.toggle('active', !isVisible);
+}
+
+async function addNewGame() {
+    const gameData = {
+        title: document.getElementById('adm-title').value,
+        price: parseInt(document.getElementById('adm-price').value),
+        img_url: document.getElementById('adm-img').value,
+        description: document.getElementById('adm-desc').value
+    };
+
+    const { error } = await sbClient.from('games').insert([gameData]);
+    
+    if (error) {
+        alert("Помилка: " + error.message);
+    } else {
+        alert("Гру додано!");
+        toggleAdminPanel();
+        location.reload();
+    }
+}
+
+const originalOverlayAction = overlay.onclick;
+overlay.onclick = () => {
+    if(originalOverlayAction) originalOverlayAction();
+    document.getElementById('admin-modal').style.display = 'none';
+};
