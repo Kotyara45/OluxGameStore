@@ -1,15 +1,14 @@
 const CONFIG = {
     SB_URL: 'https://yoxieszknznklpvnyvui.supabase.co',
     SB_KEY: 'sb_publishable_ZLbve8ADHIqc48h2YOQQUw_z8vox0s9',
-    OWNER_EMAIL: 'nazarivanyuk562@gmail.com',
-    DONATE_URL: 'https://donatello.to/OluxGameStore'
+    OWNER_EMAIL: 'nazarivanyuk562@gmail.com'
 };
 
 let sbClient = null;
 let currentUser = null;
 let cart = JSON.parse(localStorage.getItem('olux_cart')) || [];
 let userRole = 'user';
-
+-
 window.onload = async function() {
     try {
         sbClient = supabase.createClient(CONFIG.SB_URL, CONFIG.SB_KEY);
@@ -25,7 +24,7 @@ window.onload = async function() {
         renderCart();
         initFilters();
     } catch (err) {
-        console.error("System Error:", err);
+        console.error("Критична помилка завантаження:", err);
     }
 };
 
@@ -43,8 +42,8 @@ async function updateAuthUI() {
         return;
     }
 
-    if (authSect) authSect.style.display = 'none';
-    if (logoutBtn) logoutBtn.style.display = 'block';
+    authSect.style.display = 'none';
+    logoutBtn.style.display = 'block';
 
     userRole = 'user';
     if (currentUser.email === CONFIG.OWNER_EMAIL) {
@@ -58,222 +57,249 @@ async function updateAuthUI() {
         if (data) userRole = data.role;
     }
 
-    if (supportBtn) {
-        supportBtn.style.display = 'inline-block';
-        supportBtn.onclick = openUserSupportForm;
-    }
+    supportBtn.style.display = 'inline-block';
+    supportBtn.onclick = openUserSupportForm;
 
-    if (adminBtn) {
-        if (['owner', 'admin', 'moderator'].includes(userRole)) {
-            adminBtn.style.display = 'inline-block';
-            adminBtn.innerText = userRole === 'owner' ? "ВЛАСНИК 👑" : (userRole === 'admin' ? "АДМІНІСТРАТОР 🛠" : "МОДЕРАТОР 🛡");
-            adminBtn.onclick = openManagementPanel;
-        } else {
-            adminBtn.style.display = 'none';
-        }
-    }
-}
-
-function openUserSupportForm() {
-    const modalData = document.getElementById('modal-data');
-    const modal = document.getElementById('details-modal');
-    
-    modalData.innerHTML = `
-        <div style="padding: 40px; color: #222; background: #fff; border-radius: 20px; position: relative;">
-            <span class="close-btn-large" onclick="closeModal()" style="position: absolute; right: 25px; top: 15px; cursor: pointer; font-size: 40px;">&times;</span>
-            <h2 style="font-size: 30px; color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 25px;">Технічна підтримка</h2>
-            
-            <div style="margin-bottom: 25px;">
-                <label style="display:block; font-weight:bold; margin-bottom:10px; font-size: 16px;">Ваш запит:</label>
-                <textarea id="support-msg-body" placeholder="Опишіть вашу проблему якомога детальніше..." style="width: 100%; height: 220px; padding: 20px; border: 2px solid #eaeff2; border-radius: 15px; font-size: 16px; background: #fcfdfe; outline: none; resize: none;"></textarea>
-            </div>
-
-            <button onclick="submitUserTicket()" style="width: 100%; padding: 20px; background: #3498db; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; transition: 0.3s;">НАДІСЛАТИ ПОВІДОМЛЕННЯ</button>
-        </div>
-    `;
-    modal.classList.add('active');
-    document.getElementById('overlay').classList.add('active');
-}
-
-async function submitUserTicket() {
-    const msg = document.getElementById('support-msg-body').value;
-    if (msg.trim().length < 5) return alert("Будь ласка, введіть текст повідомлення.");
-
-    const { error } = await sbClient.from('support_tickets').insert([
-        { user_email: currentUser.email, message: msg, created_at: new Date() }
-    ]);
-
-    if (error) alert("Помилка: " + error.message);
-    else {
-        alert("Ваше звернення прийнято! Очікуйте відповідь на пошту.");
-        closeModal();
+    if (['owner', 'admin', 'moderator'].includes(userRole)) {
+        adminBtn.style.display = 'inline-block';
+        adminBtn.innerText = userRole === 'owner' ? "ВЛАСНИК 👑" : (userRole === 'admin' ? "АДМІНІСТРАТОР 🛠" : "МОДЕРАТОР 🛡");
+        adminBtn.onclick = openManagementPanel;
+    } else {
+        adminBtn.style.display = 'none';
     }
 }
 
 function openManagementPanel() {
     const modalData = document.getElementById('modal-data');
-    const modal = document.getElementById('details-modal');
-
-    let navTabs = `<button class="adm-t" onclick="switchTab('tickets')">ПИТАННЯ 🎧</button>`;
+    let tabs = `<button class="filter-btn" onclick="switchTab('tickets')">ЗАПИТИ 🎧</button>`;
+    
     if (userRole === 'admin' || userRole === 'owner') {
-        navTabs += `<button class="adm-t" onclick="switchTab('add_game')">КАТАЛОГ ➕</button>`;
+        tabs += `<button class="filter-btn" onclick="switchTab('add_game')">ДОДАТИ ГРУ ➕</button>`;
     }
     if (userRole === 'owner') {
-        navTabs += `<button class="adm-t" onclick="switchTab('access_control')">ПРАВА ДОСТУПУ 🔑</button>`;
+        tabs += `<button class="filter-btn" onclick="switchTab('access')">ПРАВА 🔑</button>`;
     }
 
     modalData.innerHTML = `
-        <div style="padding: 35px; background: #fff; min-height: 650px; border-radius: 15px; color: #1a1a1a;">
-            <span class="close-btn-large" onclick="closeModal()" style="float: right; cursor: pointer; font-size: 40px;">&times;</span>
-            <h1 style="font-size: 32px; margin-bottom: 30px; color: #e74c3c;">Olux Management Suite</h1>
-            <div style="display: flex; gap: 12px; margin-bottom: 30px; flex-wrap: wrap;">${navTabs}</div>
-            <div id="admin-viewport" style="background: #f7f9fb; padding: 30px; border-radius: 15px; border: 1px solid #edf2f7; min-height: 450px;"></div>
+        <div style="padding: 30px; background: #fff; min-height: 550px; color: #333;">
+            <span onclick="closeModal()" style="float:right; cursor:pointer; font-size:35px;">&times;</span>
+            <h1 style="color: #e74c3c; margin-bottom:20px;">Olux Control Panel</h1>
+            <div style="display: flex; gap: 10px; margin-bottom: 25px;">${tabs}</div>
+            <div id="admin-viewport" style="background: #fdfdfd; padding: 20px; border-radius: 12px; border: 1px solid #eee; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);"></div>
         </div>
     `;
-    modal.classList.add('active');
+    document.getElementById('details-modal').classList.add('active');
     document.getElementById('overlay').classList.add('active');
     switchTab('tickets');
 }
 
 async function switchTab(tab) {
     const view = document.getElementById('admin-viewport');
-    view.innerHTML = `<h3 style="text-align:center; padding-top:100px;">Синхронізація з базою даних...</h3>`;
+    view.innerHTML = "Завантаження...";
 
     if (tab === 'tickets') {
         const { data } = await sbClient.from('support_tickets').select('*').order('created_at', { ascending: false });
-        let html = `<h3>Активні запити (${data ? data.length : 0})</h3>`;
-        (data || []).forEach(t => {
-            html += `
-                <div style="background:white; border-left:8px solid #3498db; padding:25px; margin-bottom:20px; border-radius:10px; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:13px; color:#a0aec0;">
-                        <b>${t.user_email}</b> <span>${new Date(t.created_at).toLocaleString()}</span>
-                    </div>
-                    <p style="font-size:16px; line-height:1.6; color:#2d3748;">${t.message}</p>
-                    <div style="margin-top:20px; text-align:right;">
-                        <a href="mailto:${t.user_email}?subject=Olux Game Store Support" style="padding:10px 25px; background:#2d3748; color:white; text-decoration:none; border-radius:8px; font-weight:bold;">ВІДПОВІСТИ</a>
-                    </div>
-                </div>`;
-        });
-        view.innerHTML = html || "Немає повідомлень.";
-
-    } else if (tab === 'access_control') {
-        view.innerHTML = `
-            <h3>Управління ролями</h3>
-            <div style="background:white; padding:30px; border-radius:15px; border:1px solid #e2e8f0; margin-bottom:30px;">
-                <label style="display:block; margin-bottom:10px; font-weight:bold;">Email користувача:</label>
-                <input id="new-adm-email" type="email" style="width:100%; padding:15px; border:2px solid #edf2f7; border-radius:10px; margin-bottom:20px;">
-                
-                <label style="display:block; margin-bottom:10px; font-weight:bold;">Оберіть ранг:</label>
-                <select id="new-adm-role" style="width:100%; padding:15px; border:2px solid #edf2f7; border-radius:10px; margin-bottom:25px;">
-                    <option value="moderator">МОДЕРАТОР (Тикети)</option>
-                    <option value="admin">АДМІНІСТРАТОР (Повний контроль)</option>
-                </select>
-                
-                <button onclick="updateAccessRights()" style="width:100%; padding:18px; background:#27ae60; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">ЗБЕРЕГТИ ЗМІНИ</button>
+        view.innerHTML = `<h3>Поточні тикети</h3>` + (data || []).map(t => `
+            <div style="background:white; padding:15px; margin-bottom:10px; border-radius:8px; border-left:4px solid #3498db; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <b>${t.user_email}</b> <small style="color:#999;">${new Date(t.created_at).toLocaleString()}</small>
+                <p style="margin: 10px 0;">${t.message}</p>
+                <a href="mailto:${t.user_email}" style="color:#3498db; font-weight:bold; text-decoration:none;">→ Відповісти поштою</a>
             </div>
-            <div id="staff-table"></div>
-        `;
-        loadStaffTable();
+        `).join('') || "Запитів немає.";
 
     } else if (tab === 'add_game') {
+        // ДОДАНО ВСІ ЖАНРИ ЯКІ У ТЕБЕ Є
         view.innerHTML = `
-            <h3>Новий товар в каталозі</h3>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px;">
-                <input id="ng-t" placeholder="Назва">
-                <input id="ng-p" type="number" placeholder="Ціна (UAH)">
-                <input id="ng-i" placeholder="URL Зображення">
-                <input id="ng-a" placeholder="Розробник">
-                <input id="ng-y" placeholder="Рік випуску">
-                <select id="ng-g"><option value="action">Action</option><option value="rpg">RPG</option><option value="horror">Horror</option></select>
+            <h3>Додати новий товар у каталог</h3>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                <input id="ng-t" placeholder="Назва гри" style="padding:10px;">
+                <input id="ng-p" type="number" placeholder="Ціна (грн)" style="padding:10px;">
+                <input id="ng-i" placeholder="URL картинки" style="padding:10px;">
+                <input id="ng-a" placeholder="Студія/Автор" style="padding:10px;">
+                <input id="ng-y" placeholder="Рік випуску" style="padding:10px;">
+                <select id="ng-g" style="padding:10px;">
+                    <option value="Action">Action</option>
+                    <option value="RPG">RPG</option>
+                    <option value="Shooter">Shooter</option>
+                    <option value="Simulator">Simulator</option>
+                </select>
             </div>
-            <textarea id="ng-d" placeholder="Опис гри" style="width:100%; height:100px; margin-top:20px; padding:15px; border-radius:10px; border:2px solid #edf2f7;"></textarea>
-            <textarea id="ng-s" placeholder="Системні вимоги" style="width:100%; height:100px; margin-top:10px; padding:15px; border-radius:10px; border:2px solid #edf2f7;"></textarea>
-            <button onclick="saveNewGameToDB()" style="width:100%; margin-top:25px; background:#2ecc71; color:white; padding:20px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">ОПУБЛІКУВАТИ</button>
+            <textarea id="ng-d" placeholder="Короткий опис" style="width:100%; height:80px; margin-top:15px; padding:10px;"></textarea>
+            <textarea id="ng-s" placeholder="Системні вимоги" style="width:100%; height:50px; margin-top:10px; padding:10px;"></textarea>
+            <button onclick="saveNewGame()" style="width:100%; margin-top:20px; background:#27ae60; color:white; padding:15px; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">ЗБЕРЕГТИ В КАТАЛОГ</button>
         `;
+
+    } else if (tab === 'access') {
+        view.innerHTML = `
+            <h3>Управління доступом (Тільки Власник)</h3>
+            <div style="background:white; padding:20px; border-radius:10px; border:1px solid #ddd; margin-bottom:20px;">
+                <input id="adm-e" placeholder="Email користувача" style="width:100%; padding:10px; margin-bottom:10px;">
+                <select id="adm-r" style="width:100%; padding:10px; margin-bottom:15px;">
+                    <option value="moderator">Модератор (Тикети)</option>
+                    <option value="admin">Адміністратор (Каталог + Тикети)</option>
+                </select>
+                <button onclick="saveAccess()" style="width:100%; background:#2c3e50; color:white; padding:12px; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">ПІДТВЕРДИТИ ДОСТУП</button>
+            </div>
+            <div id="staff-list-container">Завантаження...</div>
+        `;
+        loadStaffList();
     }
 }
 
-async function updateAccessRights() {
-    const email = document.getElementById('new-adm-email').value.trim();
-    const role = document.getElementById('new-adm-role').value;
-    if (!email) return alert("Вкажіть Email!");
+async function saveAccess() {
+    const email = document.getElementById('adm-e').value.trim();
+    const role = document.getElementById('adm-r').value;
+    if (!email) return alert("Вкажіть пошту!");
 
     const { error } = await sbClient
         .from('admin_status')
         .upsert([{ user_email: email, role: role }], { onConflict: 'user_email' });
 
-    if (error) alert(error.message);
-    else { alert("Успішно оновлено!"); loadStaffTable(); }
+    if (error) {
+        alert("Помилка Supabase: " + error.message);
+    } else {
+        alert("Користувачу " + email + " надано роль " + role);
+        document.getElementById('adm-e').value = '';
+        loadStaffList();
+    }
 }
 
-async function loadStaffTable() {
-    const container = document.getElementById('staff-table');
-    const { data } = await sbClient.from('admin_status').select('*');
-    let html = `<h4>Зареєстрований персонал:</h4>`;
-    (data || []).forEach(u => {
-        html += `
-            <div style="display:flex; justify-content:space-between; background:#fff; padding:15px; margin-bottom:8px; border-radius:8px; border:1px solid #e2e8f0;">
-                <span><b>${u.user_email}</b> — ${u.role}</span>
-                <button onclick="deleteAccess('${u.user_email}')" style="color:#e74c3c; background:none; border:none; cursor:pointer; font-weight:bold;">ВИДАЛИТИ</button>
-            </div>`;
-    });
-    container.innerHTML = html;
+async function loadStaffList() {
+    const container = document.getElementById('staff-list-container');
+    const { data, error } = await sbClient.from('admin_status').select('*');
+    if (error) return container.innerHTML = "Помилка завантаження списку";
+    
+    container.innerHTML = `<h4>Діючий персонал:</h4>` + data.map(u => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #eee; background:#fff;">
+            <span><b style="color:#e74c3c;">${u.user_email}</b> — ${u.role}</span>
+            <button onclick="deleteAccess('${u.user_email}')" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">ВИДАЛИТИ</button>
+        </div>
+    `).join('');
 }
 
 async function deleteAccess(email) {
-    if (!confirm("Видалити доступ?")) return;
-    await sbClient.from('admin_status').delete().eq('user_email', email);
-    loadStaffTable();
+    if (!confirm("Видалити доступ для " + email + "?")) return;
+    const { error } = await sbClient.from('admin_status').delete().eq('user_email', email);
+    if (error) alert(error.message); else loadStaffList();
 }
 
-async function saveNewGameToDB() {
-    const game = {
-        title: document.getElementById('ng-t').value,
-        price: parseFloat(document.getElementById('ng-p').value),
-        img: document.getElementById('ng-i').value,
-        author: document.getElementById('ng-a').value,
-        year: document.getElementById('ng-y').value,
-        genre: document.getElementById('ng-g').value,
-        description: document.getElementById('ng-d').value,
-        specs: document.getElementById('ng-s').value
-    };
-    const { error } = await sbClient.from('games').insert([game]);
-    if (error) alert(error.message);
-    else { alert("Додано!"); location.reload(); }
-}
-
-function openDetails(btn) {
-    const d = btn.closest('.game-card').dataset;
+function openUserSupportForm() {
     const modalData = document.getElementById('modal-data');
     modalData.innerHTML = `
-        <div class="modal-img-side"><img src="${d.img}" style="width:100%; border-radius:20px;"></div>
-        <div class="modal-info-side">
-            <span class="close-btn-large" onclick="closeModal()">&times;</span>
-            <h2 style="color:#000; font-size:36px; margin-bottom:10px;">${d.title}</h2>
-            <div style="color:#d4af37; font-size:30px; font-weight:bold; margin-bottom:20px;">${d.price} UAH</div>
-            <p style="color:#4a5568; line-height:1.8; margin-bottom:25px;">${d.desc || 'Немає опису'}</p>
-            <div style="background:#edf2f7; padding:25px; border-radius:15px; color:#2d3748; margin-bottom:30px;">
-                <p style="margin-bottom:10px;"><b>Розробник:</b> ${d.author}</p>
-                <p style="margin-bottom:10px;"><b>Рік:</b> ${d.year}</p>
-                <p><b>Вимоги:</b> ${d.specs}</p>
-            </div>
-            <button class="buy-btn" style="width:100%; padding:22px; font-size:22px;" onclick="addToCartDirect('${d.title}', ${d.price}, '${d.img}')">🛒 ДОДАТИ В КОШИК</button>
+        <div style="padding: 40px; color: #222; background: #fff; border-radius: 20px;">
+            <h2 style="color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px;">Технічна підтримка Olux</h2>
+            <p>Ваш Email: <b>${currentUser.email}</b></p>
+            <textarea id="support-msg-body" placeholder="Опишіть ваше запитання або проблему..." style="width: 100%; height: 200px; margin-top:20px; padding: 15px; border-radius: 12px; border: 2px solid #eee; resize:none; font-family: inherit;"></textarea>
+            <button onclick="submitUserTicket()" style="width: 100%; padding: 18px; background: #3498db; color: white; border: none; border-radius: 12px; font-weight: bold; margin-top: 20px; cursor: pointer; font-size: 16px;">ВІДПРАВИТИ ЗАПИТ</button>
         </div>
     `;
     document.getElementById('details-modal').classList.add('active');
     document.getElementById('overlay').classList.add('active');
 }
 
-function addToCartDirect(t, p, i) {
-    if (cart.some(x => x.title === t)) return alert("Товар вже у кошику!");
-    cart.push({ title: t, price: parseFloat(p), img: i });
-    saveCart();
-    closeModal();
+async function submitUserTicket() {
+    const msg = document.getElementById('support-msg-body').value;
+    if (msg.trim().length < 5) return alert("Повідомлення занадто коротке!");
+    const { error } = await sbClient.from('support_tickets').insert([{ 
+        user_email: currentUser.email, 
+        message: msg, 
+        created_at: new Date() 
+    }]);
+    if (error) alert(error.message); 
+    else { alert("Дякуємо! Ваше звернення надіслано."); closeModal(); }
 }
 
-function saveCart() { localStorage.setItem('olux_cart', JSON.stringify(cart)); renderCart(); }
+function addToCart(btn) {
+    const d = btn.closest('.game-card').dataset;
+    if (cart.some(x => x.title === d.title)) return alert("Ця гра вже у кошику!");
+    cart.push({ title: d.title, price: parseInt(d.price), img: d.img });
+    localStorage.setItem('olux_cart', JSON.stringify(cart));
+    renderCart();
+    alert("Додано!");
+}
+
+function renderCart() {
+    const list = document.getElementById('cart-items');
+    document.getElementById('cart-count').innerText = cart.length;
+    let sum = 0;
+    if (cart.length === 0) {
+        list.innerHTML = "<p style='text-align:center; padding-top:40px;'>Ваш кошик ще порожній.</p>";
+    } else {
+        list.innerHTML = cart.map((item, i) => {
+            sum += item.price;
+            return `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:#f9f9f9; padding:10px; border-radius:10px;">
+                    <img src="${item.img}" style="width:40px; border-radius:5px;">
+                    <span style="font-weight:bold; flex:1; margin-left:10px;">${item.title}</span>
+                    <b style="margin-right:15px;">${item.price} грн</b>
+                    <span onclick="removeFromCart(${i})" style="color:red; cursor:pointer; font-weight:bold; font-size:22px;">&times;</span>
+                </div>`;
+        }).join('');
+    }
+    document.getElementById('cart-total').innerText = sum;
+}
+
+function removeFromCart(i) {
+    cart.splice(i, 1);
+    localStorage.setItem('olux_cart', JSON.stringify(cart));
+    renderCart();
+}
+
+async function signIn() {
+    const email = document.getElementById('auth-email').value;
+    const pass = document.getElementById('auth-password').value;
+    const { error } = await sbClient.auth.signInWithPassword({ email, password: pass });
+    if (error) alert("Помилка входу: " + error.message); else closeModal();
+}
+
+async function signUp() {
+    const email = document.getElementById('auth-email').value;
+    const pass = document.getElementById('auth-password').value;
+    const { error } = await sbClient.auth.signUp({ email, password: pass });
+    if (error) alert("Помилка реєстрації: " + error.message); else alert("Підтвердіть пошту!");
+}
+
 function signOut() { sbClient.auth.signOut().then(() => location.reload()); }
+function toggleAuthModal() { document.getElementById('auth-modal').style.display = 'block'; document.getElementById('overlay').classList.add('active'); }
+function toggleCart() { document.getElementById('cart-sidebar').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); }
 function closeModal() {
     document.getElementById('details-modal').classList.remove('active');
+    document.getElementById('cart-sidebar').classList.remove('active');
+    document.getElementById('auth-modal').style.display = 'none';
     document.getElementById('overlay').classList.remove('active');
+}
+
+function initFilters() {
+    document.querySelectorAll('.filters .filter-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelector('.filter-btn.active').classList.remove('active');
+            btn.classList.add('active');
+            const genre = btn.dataset.genre;
+            document.querySelectorAll('.game-card').forEach(card => {
+                card.style.display = (genre === 'all' || card.dataset.genre === genre) ? 'block' : 'none';
+            });
+        };
+    });
+}
+
+function openDetails(btn) {
+    const d = btn.closest('.game-card').dataset;
+    const modalData = document.getElementById('modal-data');
+    modalData.innerHTML = `
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; color:black; padding:20px;">
+            <img src="${d.img}" style="width:100%; border-radius:15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <div>
+                <span onclick="closeModal()" style="float:right; cursor:pointer; font-size:35px;">&times;</span>
+                <h1 style="margin-top:0;">${d.title}</h1>
+                <p style="font-size:28px; color:#d4af37; font-weight:bold;">${d.price} грн</p>
+                <div style="margin:20px 0; line-height:1.6; color:#555;">${d.desc}</div>
+                <div style="background:#f4f4f4; padding:15px; border-radius:12px; font-size:14px; margin-bottom:25px;">
+                    <b>Системні вимоги:</b><br>${d.specs}
+                </div>
+                <button class="buy-btn" style="width:100%; padding:18px; font-size:18px;" onclick="addToCart(this)">КУПИТИ ЗАРАЗ</button>
+            </div>
+        </div>
+    `;
+    document.getElementById('details-modal').classList.add('active');
+    document.getElementById('overlay').classList.add('active');
 }
