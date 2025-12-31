@@ -13,44 +13,75 @@ const Store = {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    applyGlobalStyles(); 
+    fixLayoutStyles();
     await checkAuthSession();
     initializeAppUI();
     renderCart();
     initFilters();
 });
 
-function applyGlobalStyles() {
-    document.body.style.backgroundColor = "#000000";
-    document.body.style.color = "#ffffff";
-    
+function fixLayoutStyles() {
     const style = document.createElement('style');
     style.innerHTML = `
-        .logo { color: #ffffff !important; font-weight: 800; font-size: 24px; text-transform: uppercase; }
-        .filter-btn { border: 1px solid #ffffff !important; color: #ffffff !important; background: transparent; border-radius: 20px; padding: 8px 20px; transition: 0.3s; }
-        .filter-btn.active, .filter-btn:hover { background: #ffffff !important; color: #000000 !important; }
-        
-        #cart-sidebar { background: #0a0a0a !important; border-left: 1px solid #ffffff !important; }
-        .cart-item { border-bottom: 1px solid #333; padding: 15px 0; display: flex; align-items: center; }
-        
-        .game-card { background: #111 !important; border-radius: 15px; overflow: hidden; transition: 0.3s; border: 1px solid #222; }
-        .game-card:hover { transform: translateY(-5px); border-color: #e74c3c; }
-        .game-card img { width: 100%; height: 280px; object-fit: cover; } /* Збільшені ави */
-        
-        #logout-btn { 
-            background: transparent !important; 
-            border: 1px solid #ff4d4d !important; 
-            color: #ff4d4d !important; 
-            padding: 5px 15px; 
-            border-radius: 5px; 
-            cursor: pointer;
-            font-size: 14px;
+        /* Глибокий чорний фон для всього сайту */
+        body, header, .filters, main, section, footer { 
+            background-color: #000000 !important; 
+            background: #000000 !important;
+            border: none !important;
         }
-        #logout-btn:hover { background: #ff4d4d !important; color: #fff !important; }
 
-        .modal-content { background: #0a0a0a !important; border: 1px solid #ffffff !important; border-radius: 20px; overflow: hidden; }
-        .info-label { color: #888; font-size: 12px; text-transform: uppercase; margin-right: 5px; }
-        .info-value { color: #fff; font-weight: bold; margin-right: 15px; }
+        /* Біла назва магазину */
+        .logo, .logo a { color: #ffffff !important; font-weight: 900; text-transform: uppercase; }
+
+        /* БІЛІ КНОПКИ ЖАНРІВ */
+        .filter-btn { 
+            border: 1px solid #ffffff !important; 
+            color: #ffffff !important; 
+            background: transparent !important; 
+            border-radius: 5px; 
+            padding: 8px 20px; 
+            margin: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .filter-btn.active, .filter-btn:hover { 
+            background: #ffffff !important; 
+            color: #000000 !important; 
+        }
+
+        /* ЗБІЛЬШЕННЯ РОЗМІРУ ФОТО ІГОР */
+        .game-card { 
+            background: #0a0a0a !important; 
+            border: 1px solid #222 !important; 
+            padding: 0 !important; 
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .game-card img { 
+            width: 100% !important; 
+            height: 320px !important; /* Значно збільшена висота фото */
+            object-fit: cover !important; 
+            display: block;
+        }
+        .game-card-info { padding: 15px; }
+
+        /* ФІКС КНОПКИ ВИЙТИ */
+        #logout-btn {
+            background: #e74c3c !important;
+            border: none !important;
+            color: white !important;
+            padding: 6px 15px !important;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        /* КОШИК З БІЛИМ КОНТУРОМ */
+        #cart-sidebar { 
+            background: #000000 !important; 
+            border-left: 1px solid #ffffff !important; 
+        }
+        .cart-header { border-bottom: 1px solid #333; padding-bottom: 10px; }
     `;
     document.head.appendChild(style);
 }
@@ -64,14 +95,14 @@ function initializeAppUI() {
     const authBtn = document.getElementById('auth-section');
     const logoutBtn = document.getElementById('logout-btn');
     const adminBtn = document.getElementById('admin-panel-btn');
-    
-    // Видаляємо кнопку допомоги з DOM
+
     const supportBtn = document.getElementById('support-btn');
     if (supportBtn) supportBtn.remove();
 
     if (Store.user) {
         if (authBtn) authBtn.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'block';
+
         checkAdminAccess(adminBtn);
     }
 }
@@ -89,30 +120,25 @@ window.openDetails = function(btn) {
     const content = document.getElementById('modal-data');
     
     content.innerHTML = `
-        <div style="display:flex; flex-wrap:wrap;">
+        <div style="display:flex; flex-wrap:wrap; background:#000; color:#fff;">
             <div style="flex:1; min-width:300px;">
-                <img src="${d.img}" style="width:100%; height:100%; object-fit:cover;">
+                <img src="${d.img}" style="width:100%; height:450px; object-fit:cover;">
             </div>
-            <div style="flex:1.2; padding:40px; position:relative;">
-                <span onclick="closeModal()" style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:30px;">&times;</span>
-                <h2 style="font-size:32px; margin-bottom:10px;">${d.title}</h2>
-                
-                <div style="margin-bottom:20px; display:flex;">
-                    <span class="info-label">Автор:</span> <span class="info-value">${d.author || 'Rockstar Games'}</span>
-                    <span class="info-label">Рік:</span> <span class="info-value">${d.year || '2019'}</span>
+            <div style="flex:1.2; padding:30px; position:relative;">
+                <span onclick="closeModal()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:30px;">&times;</span>
+                <h2 style="font-size:28px; color:#fff;">${d.title}</h2>
+                <div style="margin: 10px 0; font-size:14px; color:#888;">
+                    <span>АВТОР: <b>${d.author || 'Rockstar Games'}</b></span> | 
+                    <span>РІК: <b>${d.year || '2019'}</b></span>
                 </div>
-
-                <div style="color:#f1c40f; font-size:28px; font-weight:bold; margin-bottom:20px;">${d.price} грн</div>
-                
-                <p style="color:#ccc; line-height:1.6; margin-bottom:25px;">${d.desc}</p>
-                
-                <div style="background:#1a1a1a; padding:15px; border-radius:10px; border-left:4px solid #e74c3c; margin-bottom:25px;">
-                    <strong style="font-size:11px; color:#e74c3c;">СИСТЕМНІ ВИМОГИ:</strong><br>
-                    <span style="font-size:13px; color:#eee;">${d.specs}</span>
+                <div style="color:#f1c40f; font-size:24px; font-weight:bold; margin:15px 0;">${d.price} грн</div>
+                <p style="color:#bbb; line-height:1.5;">${d.desc}</p>
+                <div style="background:#111; padding:15px; border-radius:8px; border:1px solid #333; margin:20px 0;">
+                    <strong style="color:#e74c3c; font-size:11px;">СИСТЕМНІ ВИМОГИ:</strong><br>
+                    <span style="font-size:13px;">${d.specs}</span>
                 </div>
-                
                 <button onclick="addToCartFromModal('${d.title}', ${d.price}, '${d.img}')" 
-                        style="width:100%; padding:18px; background:#e74c3c; border:none; color:#fff; font-weight:bold; border-radius:10px; cursor:pointer;">
+                        style="width:100%; padding:15px; background:#e74c3c; border:none; color:#fff; font-weight:bold; cursor:pointer; border-radius:5px;">
                         ДОДАТИ В КОШИК
                 </button>
             </div>
@@ -125,7 +151,7 @@ window.openDetails = function(btn) {
 window.processCheckout = function() {
     if (Store.cart.length === 0) return alert("Кошик порожній!");
     const total = Store.cart.reduce((s, i) => s + i.price, 0);
-    if (confirm(`Сума до сплати: ${total} грн. Перейти до оплати на Donatello?`)) {
+    if (confirm(`Разом до оплати: ${total} грн. Перейти до оплати?`)) {
         window.open(APP_CONFIG.PAYMENT_LINK, '_blank');
     }
 };
@@ -137,8 +163,8 @@ window.addToCart = function(btn) {
     Store.cart.push(item);
     saveCart();
     renderCart();
-    btn.innerText = "У КОШИКУ";
-    btn.style.background = "#222";
+    btn.innerText = "В КОШИКУ";
+    btn.style.background = "#333";
 };
 
 function saveCart() {
@@ -152,7 +178,7 @@ function renderCart() {
     if (!container) return;
     
     if (Store.cart.length === 0) {
-        container.innerHTML = '<p style="text-align:center; opacity:0.5; margin-top:50px;">Ваш кошик чекає на ігри...</p>';
+        container.innerHTML = '<p style="text-align:center; padding:20px; opacity:0.5;">Кошик порожній</p>';
         totalEl.innerText = "0";
         return;
     }
@@ -161,13 +187,13 @@ function renderCart() {
     container.innerHTML = Store.cart.map((item, idx) => {
         total += item.price;
         return `
-            <div class="cart-item">
-                <img src="${item.img}" style="width:60px; height:60px; object-fit:cover; border-radius:5px; margin-right:15px; border:1px solid #333;">
+            <div style="display:flex; align-items:center; border-bottom:1px solid #222; padding:10px 0;">
+                <img src="${item.img}" style="width:50px; height:50px; object-fit:cover; border-radius:4px; margin-right:10px;">
                 <div style="flex:1;">
-                    <div style="font-weight:bold; font-size:14px;">${item.title}</div>
-                    <div style="color:#f1c40f;">${item.price} грн</div>
+                    <div style="font-weight:bold; font-size:13px;">${item.title}</div>
+                    <div style="color:#f1c40f; font-size:12px;">${item.price} грн</div>
                 </div>
-                <button onclick="removeFromCart(${idx})" style="background:none; border:none; color:#ff4d4d; font-size:20px; cursor:pointer;">&times;</button>
+                <button onclick="removeFromCart(${idx})" style="background:none; border:none; color:red; cursor:pointer;">&times;</button>
             </div>`;
     }).join('');
     totalEl.innerText = total;
