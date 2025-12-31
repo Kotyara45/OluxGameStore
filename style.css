@@ -49,6 +49,8 @@ body {
     letter-spacing: 1px;
 }
 
+
+
 .gta6-nav-btn {
     background: linear-gradient(45deg, var(--accent), var(--cyan));
     color: white;
@@ -342,3 +344,31 @@ body {
     .modal-img-side { height: 250px; }
     .modal-content { width: 98%; height: 90vh; overflow-y: auto; }
 }
+
+body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding-bottom: 50px; }
+header { background-color: #1a1d24; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+h1 { margin: 0; font-size: 24px; color: #e74c3c; text-transform: uppercase; letter-spacing: 2px; }
+.filters { text-align: center; margin: 20px 0; }
+.filter-btn { padding: 10px 20px; border: none; background: #ddd; cursor: pointer; border-radius: 20px; margin: 0 5px; font-weight: bold; transition: 0.3s; }
+.filter-btn.active, .filter-btn:hover { background: #e74c3c; color: white; }
+
+.catalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; padding: 20px; max-width: 1200px; margin: 0 auto; }
+.game-card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); transition: transform 0.3s; display: flex; flex-direction: column; }
+.game-card:hover { transform: translateY(-5px); }
+.card-img { height: 180px; background-size: cover; background-position: center; }
+.game-card h3 { margin: 15px 15px 5px; font-size: 18px; }
+.price { margin: 0 15px 15px; color: #27ae60; font-weight: bold; font-size: 18px; }
+.btn-group { margin-top: auto; padding: 15px; display: flex; gap: 10px; }
+.buy-btn { flex: 1; padding: 10px; border: none; background: #e74c3c; color: white; border-radius: 5px; cursor: pointer; font-weight: bold; }
+.info-btn { flex: 1; padding: 10px; border: none; background: #3498db; color: white; border-radius: 5px; cursor: pointer; font-weight: bold; }
+
+.overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; }
+.overlay.active { display: block; }
+
+.modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; z-index: 3000; width: 90%; max-width: 800px; border-radius: 15px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+.modal.active { display: block; }
+
+.sidebar { position: fixed; top: 0; right: -400px; width: 350px; height: 100%; background: white; z-index: 4000; transition: 0.3s; box-shadow: -5px 0 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+.sidebar.active { right: 0; }
+
+.gta6-nav-btn { background: linear-gradient(45deg, #ff00cc, #3333ff); color: white; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px; }
