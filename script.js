@@ -9,110 +9,199 @@ const sb = supabase.createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_KE
 
 const Store = {
     user: null,
-    cart: JSON.parse(localStorage.getItem('olux_cart')) || []
+    cart: JSON.parse(localStorage.getItem('olux_cart')) || [],
+    isAdmin: false
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    fixLayoutStyles();
+    injectAdvancedStyles(); 
     await checkAuthSession();
     initializeAppUI();
     renderCart();
     initFilters();
+    bindGlobalEvents();
 });
 
-function fixLayoutStyles() {
+function injectAdvancedStyles() {
     const style = document.createElement('style');
     style.innerHTML = `
-        /* Глибокий чорний фон для всього сайту */
-        body, header, .filters, main, section, footer { 
+        /* Глибокий чорний фон без смуг */
+        body, header, main, section, footer, .filters, .container { 
             background-color: #000000 !important; 
             background: #000000 !important;
+            color: #ffffff !important;
             border: none !important;
         }
 
         /* Біла назва магазину */
-        .logo, .logo a { color: #ffffff !important; font-weight: 900; text-transform: uppercase; }
+        .logo, .logo a { 
+            color: #ffffff !important; 
+            font-size: 26px; 
+            font-weight: 900; 
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
 
-        /* БІЛІ КНОПКИ ЖАНРІВ */
+        /* Білі фільтри */
         .filter-btn { 
             border: 1px solid #ffffff !important; 
             color: #ffffff !important; 
             background: transparent !important; 
-            border-radius: 5px; 
-            padding: 8px 20px; 
-            margin: 5px;
+            border-radius: 4px; 
+            padding: 10px 22px; 
+            font-weight: 600;
             cursor: pointer;
-            transition: 0.3s;
+            transition: 0.3s ease;
         }
         .filter-btn.active, .filter-btn:hover { 
             background: #ffffff !important; 
             color: #000000 !important; 
         }
 
-        /* ЗБІЛЬШЕННЯ РОЗМІРУ ФОТО ІГОР */
+        /* РОЗМІРИ ЗОБРАЖЕНЬ ІГОР (CSS FIX) */
         .game-card { 
             background: #0a0a0a !important; 
-            border: 1px solid #222 !important; 
-            padding: 0 !important; 
-            overflow: hidden;
+            border: 1px solid #1a1a1a !important; 
+            transition: 0.3s;
             display: flex;
             flex-direction: column;
+            height: 100%;
         }
+        .game-card:hover { border-color: #ffffff; }
+        
         .game-card img { 
             width: 100% !important; 
-            height: 320px !important; /* Значно збільшена висота фото */
+            height: 350px !important; /* Фіксована велика висота */
             object-fit: cover !important; 
-            display: block;
+            border-bottom: 1px solid #1a1a1a;
         }
-        .game-card-info { padding: 15px; }
 
-        /* ФІКС КНОПКИ ВИЙТИ */
+        /* Кнопка Вийти */
         #logout-btn {
             background: #e74c3c !important;
+            color: #fff !important;
             border: none !important;
-            color: white !important;
-            padding: 6px 15px !important;
+            padding: 8px 18px !important;
             border-radius: 4px;
             font-weight: bold;
+            cursor: pointer;
         }
 
-        /* КОШИК З БІЛИМ КОНТУРОМ */
+        /* Кошик з білим контуром */
         #cart-sidebar { 
             background: #000000 !important; 
-            border-left: 1px solid #ffffff !important; 
+            border-left: 2px solid #ffffff !important; 
+            box-shadow: -5px 0 20px rgba(255,255,255,0.05);
         }
-        .cart-header { border-bottom: 1px solid #333; padding-bottom: 10px; }
+
+        /* Модальне вікно */
+        .modal-content { 
+            background: #050505 !important; 
+            border: 1px solid #ffffff !important; 
+            color: #ffffff;
+        }
     `;
     document.head.appendChild(style);
 }
 
 async function checkAuthSession() {
     const { data: { session } } = await sb.auth.getSession();
-    if (session) Store.user = session.user;
+    if (session) {
+        Store.user = session.user;
+        const { data } = await sb.from('admin_status')
+            .select('role')
+            .eq('user_email', Store.user.email)
+            .maybeSingle();
+
+        if (Store.user.email === APP_CONFIG.OWNER_EMAIL || (data && data.role === 'admin')) {
+            Store.isAdmin = true;
+        }
+    }
 }
 
 function initializeAppUI() {
-    const authBtn = document.getElementById('auth-section');
+    const authSect = document.getElementById('auth-section');
     const logoutBtn = document.getElementById('logout-btn');
     const adminBtn = document.getElementById('admin-panel-btn');
-
+    
     const supportBtn = document.getElementById('support-btn');
     if (supportBtn) supportBtn.remove();
 
     if (Store.user) {
-        if (authBtn) authBtn.style.display = 'none';
+        if (authSect) authSect.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'block';
-
-        checkAdminAccess(adminBtn);
+        if (Store.isAdmin && adminBtn) adminBtn.style.display = 'block';
     }
 }
 
-async function checkAdminAccess(btn) {
-    const { data } = await sb.from('admin_status').select('role').eq('user_email', Store.user.email).maybeSingle();
-    if (Store.user.email === APP_CONFIG.OWNER_EMAIL || (data && data.role === 'admin')) {
-        if (btn) btn.style.display = 'block';
+window.openAdminPanel = async function() {
+    if (!Store.isAdmin) return alert("Доступ заборонено");
+    
+    const modal = document.getElementById('details-modal');
+    const content = document.getElementById('modal-data');
+    
+    content.innerHTML = `
+        <div style="padding:40px; background:#000;">
+            <h2 style="color:#fff; border-bottom:1px solid #fff; padding-bottom:10px;">АДМІН ПАНЕЛЬ OLUX</h2>
+            <div style="display:flex; gap:10px; margin:20px 0;">
+                <button onclick="showAdminTab('orders')" class="filter-btn">ЗАМОВЛЕННЯ</button>
+                <button onclick="showAdminTab('add-game')" class="filter-btn">ДОДАТИ ГРУ</button>
+                <button onclick="closeModal()" class="filter-btn" style="border-color:red; color:red;">ЗАКРИТИ</button>
+            </div>
+            <div id="admin-view-area" style="margin-top:20px;">
+                <p>Виберіть розділ для керування.</p>
+            </div>
+        </div>
+    `;
+    modal.classList.add('active');
+    document.getElementById('overlay').classList.add('active');
+};
+
+window.showAdminTab = async function(tab) {
+    const area = document.getElementById('admin-view-area');
+    if (tab === 'orders') {
+        area.innerHTML = "<p>Завантаження замовлень...</p>";
+        const { data } = await sb.from('orders').select('*').order('created_at', { ascending: false });
+        area.innerHTML = data.length ? data.map(o => `
+            <div style="border:1px solid #333; padding:10px; margin-bottom:5px; font-size:12px;">
+                <b>ID:</b> ${o.id.slice(0,8)} | <b>Email:</b> ${o.user_email || 'Гість'} <br>
+                <b>Товари:</b> ${o.items} | <b>Сума:</b> ${o.total_price} грн
+            </div>
+        `).join('') : "Замовлень немає.";
+    } else if (tab === 'add-game') {
+        area.innerHTML = `
+            <div style="display:grid; gap:10px;">
+                <input id="new-t" placeholder="Назва" style="padding:8px; background:#111; border:1px solid #fff; color:#fff;">
+                <input id="new-p" placeholder="Ціна" style="padding:8px; background:#111; border:1px solid #fff; color:#fff;">
+                <input id="new-i" placeholder="URL Фото" style="padding:8px; background:#111; border:1px solid #fff; color:#fff;">
+                <button onclick="saveNewGame()" style="background:#fff; color:#000; border:none; padding:10px; font-weight:bold; cursor:pointer;">ЗБЕРЕГТИ</button>
+            </div>
+        `;
     }
-}
+};
+
+window.processCheckout = function() {
+    if (Store.cart.length === 0) return alert("Кошик порожній!");
+    
+    const total = Store.cart.reduce((sum, item) => sum + item.price, 0);
+    const titles = Store.cart.map(i => i.title).join(', ');
+    
+    console.log("Оформлення замовлення:", titles, "на суму:", total);
+
+    if (confirm(`Підтвердити замовлення на суму ${total} грн?\nПісля підтвердження відкриється сторінка оплати Donatello.`)) {
+        window.open(APP_CONFIG.PAYMENT_LINK, '_blank');
+        
+        if (Store.user) {
+            sb.from('orders').insert([{
+                user_id: Store.user.id,
+                user_email: Store.user.email,
+                items: titles,
+                total_price: total,
+                status: 'redirected_to_payment'
+            }]).then(() => console.log("Замовлення зареєстровано"));
+        }
+    }
+};
 
 window.openDetails = function(btn) {
     const d = btn.closest('.game-card').dataset;
@@ -120,25 +209,25 @@ window.openDetails = function(btn) {
     const content = document.getElementById('modal-data');
     
     content.innerHTML = `
-        <div style="display:flex; flex-wrap:wrap; background:#000; color:#fff;">
+        <div style="display:flex; flex-wrap:wrap; background:#000;">
             <div style="flex:1; min-width:300px;">
-                <img src="${d.img}" style="width:100%; height:450px; object-fit:cover;">
+                <img src="${d.img}" style="width:100%; height:100%; object-fit:cover;">
             </div>
-            <div style="flex:1.2; padding:30px; position:relative;">
-                <span onclick="closeModal()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:30px;">&times;</span>
-                <h2 style="font-size:28px; color:#fff;">${d.title}</h2>
-                <div style="margin: 10px 0; font-size:14px; color:#888;">
-                    <span>АВТОР: <b>${d.author || 'Rockstar Games'}</b></span> | 
-                    <span>РІК: <b>${d.year || '2019'}</b></span>
+            <div style="flex:1.2; padding:40px; position:relative;">
+                <span onclick="closeModal()" style="position:absolute; top:15px; right:20px; cursor:pointer; font-size:32px; color:#fff;">&times;</span>
+                <h2 style="font-size:35px; color:#fff; margin:0;">${d.title}</h2>
+                <div style="margin: 15px 0; color:#888; font-size:14px;">
+                    АВТОР: <b style="color:#fff;">${d.author || 'Не вказано'}</b> | 
+                    РІК: <b style="color:#fff;">${d.year || '2023'}</b>
                 </div>
-                <div style="color:#f1c40f; font-size:24px; font-weight:bold; margin:15px 0;">${d.price} грн</div>
-                <p style="color:#bbb; line-height:1.5;">${d.desc}</p>
-                <div style="background:#111; padding:15px; border-radius:8px; border:1px solid #333; margin:20px 0;">
-                    <strong style="color:#e74c3c; font-size:11px;">СИСТЕМНІ ВИМОГИ:</strong><br>
-                    <span style="font-size:13px;">${d.specs}</span>
+                <div style="font-size:30px; color:#f1c40f; font-weight:900; margin:20px 0;">${d.price} грн</div>
+                <p style="color:#ccc; line-height:1.7; font-size:15px;">${d.desc}</p>
+                <div style="background:#111; padding:20px; border-radius:8px; border:1px solid #333; margin:25px 0;">
+                    <span style="color:#e74c3c; font-size:12px; font-weight:bold; text-transform:uppercase;">Системні вимоги:</span><br>
+                    <p style="font-size:13px; margin:10px 0 0 0; color:#fff;">${d.specs}</p>
                 </div>
                 <button onclick="addToCartFromModal('${d.title}', ${d.price}, '${d.img}')" 
-                        style="width:100%; padding:15px; background:#e74c3c; border:none; color:#fff; font-weight:bold; cursor:pointer; border-radius:5px;">
+                        style="width:100%; padding:20px; background:#e74c3c; border:none; color:#fff; font-weight:bold; border-radius:5px; cursor:pointer; font-size:16px;">
                         ДОДАТИ В КОШИК
                 </button>
             </div>
@@ -148,28 +237,25 @@ window.openDetails = function(btn) {
     document.getElementById('overlay').classList.add('active');
 };
 
-window.processCheckout = function() {
-    if (Store.cart.length === 0) return alert("Кошик порожній!");
-    const total = Store.cart.reduce((s, i) => s + i.price, 0);
-    if (confirm(`Разом до оплати: ${total} грн. Перейти до оплати?`)) {
-        window.open(APP_CONFIG.PAYMENT_LINK, '_blank');
-    }
-};
-
 window.addToCart = function(btn) {
     const card = btn.closest('.game-card');
-    const item = { title: card.dataset.title, price: parseInt(card.dataset.price), img: card.dataset.img };
+    const item = { 
+        title: card.dataset.title, 
+        price: parseInt(card.dataset.price), 
+        img: card.dataset.img 
+    };
     if (Store.cart.find(i => i.title === item.title)) return;
     Store.cart.push(item);
     saveCart();
     renderCart();
-    btn.innerText = "В КОШИКУ";
-    btn.style.background = "#333";
+    btn.innerText = "У КОШИКУ";
+    btn.style.background = "#222";
 };
 
 function saveCart() {
     localStorage.setItem('olux_cart', JSON.stringify(Store.cart));
-    document.getElementById('cart-count').innerText = Store.cart.length;
+    const badge = document.getElementById('cart-count');
+    if (badge) badge.innerText = Store.cart.length;
 }
 
 function renderCart() {
@@ -178,8 +264,8 @@ function renderCart() {
     if (!container) return;
     
     if (Store.cart.length === 0) {
-        container.innerHTML = '<p style="text-align:center; padding:20px; opacity:0.5;">Кошик порожній</p>';
-        totalEl.innerText = "0";
+        container.innerHTML = '<div style="text-align:center; padding:50px; opacity:0.3;">Кошик порожній</div>';
+        if (totalEl) totalEl.innerText = "0";
         return;
     }
 
@@ -187,16 +273,16 @@ function renderCart() {
     container.innerHTML = Store.cart.map((item, idx) => {
         total += item.price;
         return `
-            <div style="display:flex; align-items:center; border-bottom:1px solid #222; padding:10px 0;">
-                <img src="${item.img}" style="width:50px; height:50px; object-fit:cover; border-radius:4px; margin-right:10px;">
+            <div style="display:flex; align-items:center; padding:15px 0; border-bottom:1px solid #1a1a1a;">
+                <img src="${item.img}" style="width:50px; height:60px; object-fit:cover; border-radius:4px; margin-right:15px; border:1px solid #333;">
                 <div style="flex:1;">
-                    <div style="font-weight:bold; font-size:13px;">${item.title}</div>
-                    <div style="color:#f1c40f; font-size:12px;">${item.price} грн</div>
+                    <div style="font-weight:bold; font-size:14px; color:#fff;">${item.title}</div>
+                    <div style="color:#f1c40f; font-size:13px;">${item.price} грн</div>
                 </div>
-                <button onclick="removeFromCart(${idx})" style="background:none; border:none; color:red; cursor:pointer;">&times;</button>
+                <button onclick="removeFromCart(${idx})" style="background:none; border:none; color:#ff4d4d; font-size:20px; cursor:pointer;">&times;</button>
             </div>`;
     }).join('');
-    totalEl.innerText = total;
+    if (totalEl) totalEl.innerText = total;
 }
 
 window.removeFromCart = function(idx) {
@@ -232,6 +318,11 @@ function initFilters() {
     });
 }
 
+function bindGlobalEvents() {
+    document.getElementById('overlay').addEventListener('click', closeModal);
+    window.addEventListener('keydown', (e) => { if (e.key === "Escape") closeModal(); });
+}
+
 window.toggleAuthModal = function() {
     document.getElementById('auth-modal').style.display = 'block';
     document.getElementById('overlay').classList.add('active');
@@ -244,4 +335,10 @@ window.addToCartFromModal = function(t, p, i) {
     renderCart();
     closeModal();
     toggleCart();
+};
+
+window.signOut = async function() {
+    await sb.auth.signOut();
+    localStorage.removeItem('olux_cart');
+    location.reload();
 };
