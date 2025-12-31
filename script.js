@@ -2,242 +2,193 @@ const APP_CONFIG = {
     SUPABASE_URL: 'https://yoxieszknznklpvnyvui.supabase.co',
     SUPABASE_KEY: 'sb_publishable_ZLbve8ADHIqc48h2YOQQUw_z8vox0s9',
     OWNER_EMAIL: 'nazarivanyuk562@gmail.com',
-    PAYMENT_LINK: 'https://www.donatello.to/OluxGameStore',
-    CURRENCY: 'грн'
+    PAYMENT_LINK: 'https://donatello.to/OluxGameStore'
 };
 
 const sb = supabase.createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_KEY);
 
 const Store = {
     user: null,
-    profile: null,
-    cart: JSON.parse(localStorage.getItem('olux_cart')) || [],
-    isModalOpen: false,
-    activeFilter: 'all',
-    wishlist: JSON.parse(localStorage.getItem('olux_wishlist')) || []
+    cart: JSON.parse(localStorage.getItem('olux_cart')) || []
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
+    applyGlobalStyles(); 
     await checkAuthSession();
     initializeAppUI();
-    bindGlobalEvents();
-    syncCartWithUI();
+    renderCart();
     initFilters();
-    setupSearch();
-    loadAnalytics();
 });
 
-async function checkAuthSession() {
-    try {
-        const { data: { session }, error } = await sb.auth.getSession();
-        if (error) throw error;
-        if (session) {
-            Store.user = session.user;
-            await fetchUserProfile();
+function applyGlobalStyles() {
+    document.body.style.backgroundColor = "#000000";
+    document.body.style.color = "#ffffff";
+    
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .logo { color: #ffffff !important; font-weight: 800; font-size: 24px; text-transform: uppercase; }
+        .filter-btn { border: 1px solid #ffffff !important; color: #ffffff !important; background: transparent; border-radius: 20px; padding: 8px 20px; transition: 0.3s; }
+        .filter-btn.active, .filter-btn:hover { background: #ffffff !important; color: #000000 !important; }
+        
+        #cart-sidebar { background: #0a0a0a !important; border-left: 1px solid #ffffff !important; }
+        .cart-item { border-bottom: 1px solid #333; padding: 15px 0; display: flex; align-items: center; }
+        
+        .game-card { background: #111 !important; border-radius: 15px; overflow: hidden; transition: 0.3s; border: 1px solid #222; }
+        .game-card:hover { transform: translateY(-5px); border-color: #e74c3c; }
+        .game-card img { width: 100%; height: 280px; object-fit: cover; } /* Збільшені ави */
+        
+        #logout-btn { 
+            background: transparent !important; 
+            border: 1px solid #ff4d4d !important; 
+            color: #ff4d4d !important; 
+            padding: 5px 15px; 
+            border-radius: 5px; 
+            cursor: pointer;
+            font-size: 14px;
         }
-    } catch (err) {
-        console.error(err.message);
-    }
+        #logout-btn:hover { background: #ff4d4d !important; color: #fff !important; }
+
+        .modal-content { background: #0a0a0a !important; border: 1px solid #ffffff !important; border-radius: 20px; overflow: hidden; }
+        .info-label { color: #888; font-size: 12px; text-transform: uppercase; margin-right: 5px; }
+        .info-value { color: #fff; font-weight: bold; margin-right: 15px; }
+    `;
+    document.head.appendChild(style);
 }
 
-async function fetchUserProfile() {
-    if (!Store.user) return;
-    const { data, error } = await sb.from('profiles').select('*').eq('id', Store.user.id).maybeSingle();
-    if (!error && data) Store.profile = data;
+async function checkAuthSession() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) Store.user = session.user;
 }
 
 function initializeAppUI() {
-    const authSect = document.getElementById('auth-section');
+    const authBtn = document.getElementById('auth-section');
     const logoutBtn = document.getElementById('logout-btn');
     const adminBtn = document.getElementById('admin-panel-btn');
+    
+    // Видаляємо кнопку допомоги з DOM
     const supportBtn = document.getElementById('support-btn');
+    if (supportBtn) supportBtn.remove();
 
     if (Store.user) {
-        if (authSect) authSect.style.display = 'none';
+        if (authBtn) authBtn.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'block';
-        if (supportBtn) {
-            supportBtn.style.display = 'block';
-            supportBtn.onclick = openUserSupportForm;
-        }
-        checkAdminRights(adminBtn);
-    } else {
-        if (authSect) authSect.style.display = 'block';
-        if (logoutBtn) logoutBtn.style.display = 'none';
-        if (adminBtn) adminBtn.style.display = 'none';
-        if (supportBtn) supportBtn.style.display = 'none';
+        checkAdminAccess(adminBtn);
     }
 }
 
-async function checkAdminRights(btn) {
-    if (!Store.user) return;
+async function checkAdminAccess(btn) {
     const { data } = await sb.from('admin_status').select('role').eq('user_email', Store.user.email).maybeSingle();
-    if (Store.user.email === APP_CONFIG.OWNER_EMAIL || (data && (data.role === 'admin' || data.role === 'moderator'))) {
+    if (Store.user.email === APP_CONFIG.OWNER_EMAIL || (data && data.role === 'admin')) {
         if (btn) btn.style.display = 'block';
     }
 }
 
-function bindGlobalEvents() {
-    document.getElementById('overlay').addEventListener('click', closeModal);
-    document.addEventListener('keydown', (e) => { if (e.key === "Escape") closeModal(); });
-    window.addEventListener('scroll', handleHeaderScroll);
-}
+window.openDetails = function(btn) {
+    const d = btn.closest('.game-card').dataset;
+    const modal = document.getElementById('details-modal');
+    const content = document.getElementById('modal-data');
+    
+    content.innerHTML = `
+        <div style="display:flex; flex-wrap:wrap;">
+            <div style="flex:1; min-width:300px;">
+                <img src="${d.img}" style="width:100%; height:100%; object-fit:cover;">
+            </div>
+            <div style="flex:1.2; padding:40px; position:relative;">
+                <span onclick="closeModal()" style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:30px;">&times;</span>
+                <h2 style="font-size:32px; margin-bottom:10px;">${d.title}</h2>
+                
+                <div style="margin-bottom:20px; display:flex;">
+                    <span class="info-label">Автор:</span> <span class="info-value">${d.author || 'Rockstar Games'}</span>
+                    <span class="info-label">Рік:</span> <span class="info-value">${d.year || '2019'}</span>
+                </div>
 
-function handleHeaderScroll() {
-    const header = document.querySelector('header');
-    if (window.scrollY > 50) header.style.boxShadow = "0 5px 20px rgba(0,0,0,0.5)";
-    else header.style.boxShadow = "none";
-}
-
-window.signIn = async function() {
-    const email = document.getElementById('auth-email').value;
-    const pass = document.getElementById('auth-password').value;
-    if (!validateEmail(email)) return alert("Email error");
-    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-    if (error) alert(error.message); else location.reload();
+                <div style="color:#f1c40f; font-size:28px; font-weight:bold; margin-bottom:20px;">${d.price} грн</div>
+                
+                <p style="color:#ccc; line-height:1.6; margin-bottom:25px;">${d.desc}</p>
+                
+                <div style="background:#1a1a1a; padding:15px; border-radius:10px; border-left:4px solid #e74c3c; margin-bottom:25px;">
+                    <strong style="font-size:11px; color:#e74c3c;">СИСТЕМНІ ВИМОГИ:</strong><br>
+                    <span style="font-size:13px; color:#eee;">${d.specs}</span>
+                </div>
+                
+                <button onclick="addToCartFromModal('${d.title}', ${d.price}, '${d.img}')" 
+                        style="width:100%; padding:18px; background:#e74c3c; border:none; color:#fff; font-weight:bold; border-radius:10px; cursor:pointer;">
+                        ДОДАТИ В КОШИК
+                </button>
+            </div>
+        </div>
+    `;
+    modal.classList.add('active');
+    document.getElementById('overlay').classList.add('active');
 };
 
-window.signUp = async function() {
-    const email = document.getElementById('auth-email').value;
-    const pass = document.getElementById('auth-password').value;
-    if (pass.length < 6) return alert("Min 6 chars");
-    const { error } = await sb.auth.signUp({ email, password: pass });
-    if (error) alert(error.message); else alert("Check your email!");
+window.processCheckout = function() {
+    if (Store.cart.length === 0) return alert("Кошик порожній!");
+    const total = Store.cart.reduce((s, i) => s + i.price, 0);
+    if (confirm(`Сума до сплати: ${total} грн. Перейти до оплати на Donatello?`)) {
+        window.open(APP_CONFIG.PAYMENT_LINK, '_blank');
+    }
 };
 
-window.signOut = async function() {
-    await sb.auth.signOut();
-    localStorage.removeItem('olux_cart');
-    location.reload();
-};
-
-window.addToCart = function(element) {
-    const card = element.closest('.game-card');
-    const gameData = {
-        id: btoa(card.dataset.title),
-        title: card.dataset.title,
-        price: parseFloat(card.dataset.price),
-        img: card.dataset.img,
-        timestamp: Date.now()
-    };
-    if (Store.cart.find(item => item.title === gameData.title)) return alert("Already in cart");
-    Store.cart.push(gameData);
-    updateCartStorage();
-    animateButton(element);
+window.addToCart = function(btn) {
+    const card = btn.closest('.game-card');
+    const item = { title: card.dataset.title, price: parseInt(card.dataset.price), img: card.dataset.img };
+    if (Store.cart.find(i => i.title === item.title)) return;
+    Store.cart.push(item);
+    saveCart();
     renderCart();
+    btn.innerText = "У КОШИКУ";
+    btn.style.background = "#222";
 };
 
-function updateCartStorage() {
+function saveCart() {
     localStorage.setItem('olux_cart', JSON.stringify(Store.cart));
     document.getElementById('cart-count').innerText = Store.cart.length;
 }
-
-function syncCartWithUI() {
-    document.getElementById('cart-count').innerText = Store.cart.length;
-    renderCart();
-}
-
-window.removeFromCart = function(index) {
-    Store.cart.splice(index, 1);
-    updateCartStorage();
-    renderCart();
-};
 
 function renderCart() {
     const container = document.getElementById('cart-items');
     const totalEl = document.getElementById('cart-total');
     if (!container) return;
+    
     if (Store.cart.length === 0) {
-        container.innerHTML = '<div style="text-align:center;padding:20px;">Порожньо</div>';
+        container.innerHTML = '<p style="text-align:center; opacity:0.5; margin-top:50px;">Ваш кошик чекає на ігри...</p>';
         totalEl.innerText = "0";
         return;
     }
+
     let total = 0;
     container.innerHTML = Store.cart.map((item, idx) => {
         total += item.price;
         return `
-            <div class="cart-item-row" style="display:flex;align-items:center;margin-bottom:10px;background:#2c2f36;padding:10px;border-radius:8px;">
-                <img src="${item.img}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;margin-right:10px;">
-                <div style="flex:1;font-size:13px;">${item.title}</div>
-                <div style="color:#f1c40f;margin-right:10px;">${item.price}</div>
-                <button onclick="removeFromCart(${idx})" style="background:none;border:none;color:red;cursor:pointer;">&times;</button>
+            <div class="cart-item">
+                <img src="${item.img}" style="width:60px; height:60px; object-fit:cover; border-radius:5px; margin-right:15px; border:1px solid #333;">
+                <div style="flex:1;">
+                    <div style="font-weight:bold; font-size:14px;">${item.title}</div>
+                    <div style="color:#f1c40f;">${item.price} грн</div>
+                </div>
+                <button onclick="removeFromCart(${idx})" style="background:none; border:none; color:#ff4d4d; font-size:20px; cursor:pointer;">&times;</button>
             </div>`;
     }).join('');
     totalEl.innerText = total;
 }
+
+window.removeFromCart = function(idx) {
+    Store.cart.splice(idx, 1);
+    saveCart();
+    renderCart();
+};
 
 window.toggleCart = function() {
     document.getElementById('cart-sidebar').classList.toggle('active');
     document.getElementById('overlay').classList.toggle('active');
 };
 
-window.processCheckout = async function() {
-    if (Store.cart.length === 0) return alert("Cart empty");
-    if (!Store.user) return toggleAuthModal();
-    const total = Store.cart.reduce((s, i) => s + i.price, 0);
-    const titles = Store.cart.map(i => i.title).join(', ');
-    const { error } = await sb.from('orders').insert([{
-        user_id: Store.user.id,
-        items: titles,
-        total_price: total,
-        status: 'pending'
-    }]);
-    if (confirm(`Сума: ${total} грн. Перейти до оплати?`)) {
-        window.open(APP_CONFIG.PAYMENT_LINK, '_blank');
-    }
-};
-
-window.openDetails = function(button) {
-    const d = button.closest('.game-card').dataset;
-    const modalData = document.getElementById('modal-data');
-    modalData.innerHTML = `
-        <div style="display:flex;flex-wrap:wrap;color:white;">
-            <div style="flex:1;min-width:250px;"><img src="${d.img}" style="width:100%;height:100%;object-fit:cover;"></div>
-            <div style="flex:1.2;padding:30px;min-width:250px;">
-                <h2 style="color:#e74c3c;">${d.title}</h2>
-                <p style="color:#f1c40f;font-size:24px;font-weight:bold;">${d.price} грн</p>
-                <p style="font-size:14px;line-height:1.6;">${d.desc}</p>
-                <div style="background:#0f1115;padding:10px;border-radius:5px;margin:15px 0;font-size:12px;">
-                    <b>Вимоги:</b> ${d.specs}
-                </div>
-                <button onclick="addToCartFromModal('${d.title}', ${d.price}, '${d.img}')" style="width:100%;padding:15px;background:#e74c3c;border:none;color:white;font-weight:bold;cursor:pointer;border-radius:5px;">КУПИТИ ЗАРАЗ</button>
-            </div>
-        </div>`;
-    document.getElementById('details-modal').classList.add('active');
-    document.getElementById('overlay').classList.add('active');
-};
-
-window.addToCartFromModal = function(t, p, i) {
-    if (Store.cart.find(item => item.title === t)) return alert("Already in cart");
-    Store.cart.push({ title: t, price: p, img: i });
-    updateCartStorage();
-    closeModal();
-    toggleCart();
-};
-
-window.openUserSupportForm = function() {
-    const modalData = document.getElementById('modal-data');
-    modalData.innerHTML = `
-        <div style="padding:30px;">
-            <h3>Підтримка Olux</h3>
-            <select id="t-cat" style="width:100%;padding:10px;margin-bottom:10px;background:#1a1d24;color:white;border:1px solid #444;">
-                <option value="pay">Оплата</option>
-                <option value="key">Ключ</option>
-                <option value="tech">Технічне</option>
-            </select>
-            <textarea id="t-msg" style="width:100%;height:100px;background:#1a1d24;color:white;border:1px solid #444;padding:10px;"></textarea>
-            <button onclick="submitTicket()" style="width:100%;padding:10px;margin-top:10px;background:#3498db;border:none;color:white;cursor:pointer;">ВІДПРАВИТИ</button>
-        </div>`;
-    document.getElementById('details-modal').classList.add('active');
-    document.getElementById('overlay').classList.add('active');
-};
-
-window.submitTicket = async function() {
-    const msg = document.getElementById('t-msg').value;
-    const cat = document.getElementById('t-cat').value;
-    if (!Store.user || msg.length < 5) return alert("Error");
-    await sb.from('support_tickets').insert([{ user_id: Store.user.id, category: cat, message: msg }]);
-    alert("Надіслано!");
-    closeModal();
+window.closeModal = function() {
+    document.querySelectorAll('.modal, .sidebar').forEach(m => m.classList.remove('active'));
+    document.getElementById('overlay').classList.remove('active');
+    const auth = document.getElementById('auth-modal');
+    if (auth) auth.style.display = 'none';
 };
 
 function initFilters() {
@@ -255,95 +206,16 @@ function initFilters() {
     });
 }
 
-function setupSearch() {
-    const searchInput = document.createElement('input');
-    searchInput.type = "text";
-    searchInput.placeholder = "Пошук ігор...";
-    searchInput.className = "dark-input search-bar";
-    searchInput.style.margin = "20px auto";
-    searchInput.style.display = "block";
-    searchInput.style.width = "300px";
-    document.querySelector('.filters').prepend(searchInput);
-    
-    searchInput.addEventListener('input', (e) => {
-        const val = e.target.value.toLowerCase();
-        document.querySelectorAll('.game-card').forEach(c => {
-            const t = c.dataset.title.toLowerCase();
-            c.style.display = t.includes(val) ? 'flex' : 'none';
-        });
-    });
-}
-
-function animateButton(btn) {
-    const oldText = btn.innerText;
-    btn.innerText = "✓";
-    btn.style.background = "#27ae60";
-    setTimeout(() => { btn.innerText = oldText; btn.style.background = ""; }, 1500);
-}
-
-function validateEmail(e) { return /^\S+@\S+\.\S+$/.test(e); }
-
 window.toggleAuthModal = function() {
     document.getElementById('auth-modal').style.display = 'block';
     document.getElementById('overlay').classList.add('active');
 };
 
-window.closeModal = function() {
-    document.querySelectorAll('.modal, .sidebar').forEach(m => m.classList.remove('active'));
-    document.getElementById('auth-modal').style.display = 'none';
-    document.getElementById('overlay').classList.remove('active');
+window.addToCartFromModal = function(t, p, i) {
+    if (Store.cart.find(item => item.title === t)) return alert("Вже у кошику");
+    Store.cart.push({ title: t, price: p, img: i });
+    saveCart();
+    renderCart();
+    closeModal();
+    toggleCart();
 };
-
-function loadAnalytics() {
-    console.log("Analytics v1.0.4 loaded");
-}
-
-window.addToWishlist = function(title) {
-    if (Store.wishlist.includes(title)) return;
-    Store.wishlist.push(title);
-    localStorage.setItem('olux_wishlist', JSON.stringify(Store.wishlist));
-};
-
-function updatePriceDynamic() {
-    const prices = document.querySelectorAll('.price');
-    prices.forEach(p => {
-        const val = parseInt(p.innerText);
-        if (val > 1000) p.style.color = "#ff4757";
-    });
-}
-
-window.onresize = () => { if (window.innerWidth > 1000) closeModal(); };
-
-function initLazyLoading() {
-    const images = document.querySelectorAll('.card-img');
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const bg = entry.target.style.backgroundImage;
-                if (bg) entry.target.style.opacity = 1;
-                observer.unobserve(entry.target);
-            }
-        });
-    });
-    images.forEach(img => { img.style.opacity = 0; img.style.transition = "0.5s"; observer.observe(img); });
-}
-initLazyLoading();
-updatePriceDynamic();
-
-window.showNotification = function(msg) {
-    const note = document.createElement('div');
-    note.innerText = msg;
-    note.style.position = "fixed";
-    note.style.bottom = "20px";
-    note.style.right = "20px";
-    note.style.background = "#e74c3c";
-    note.style.padding = "10px 20px";
-    note.style.borderRadius = "5px";
-    note.style.zIndex = "9999";
-    document.body.appendChild(note);
-    setTimeout(() => note.remove(), 3000);
-};
-
-(function checkSystemIntegrity() {
-    if (!document.getElementById('catalog-grid')) console.error("Catalog missing");
-})();
