@@ -22,6 +22,14 @@ window.onload = async function() {
             updateAuthUI();
         });
 
+        const headerAuthBtn = document.querySelector('#auth-section button');
+        if (headerAuthBtn) {
+            headerAuthBtn.onclick = (e) => {
+                e.preventDefault();
+                toggleAuthModal();
+            };
+        }
+
         await updateAuthUI();
         renderCart();
         initFilters();
@@ -79,7 +87,9 @@ async function updateAuthUI() {
 async function signIn() {
     const email = document.getElementById('auth-email').value;
     const password = document.getElementById('auth-password').value;
+    
     const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+    
     if (error) {
         alert("Помилка входу: " + error.message);
     } else {
@@ -91,9 +101,10 @@ async function signUp() {
     const email = document.getElementById('auth-email').value;
     const password = document.getElementById('auth-password').value;
     const { error } = await sbClient.auth.signUp({ email, password });
+    
     if (error) alert("Помилка: " + error.message);
     else {
-        alert("Реєстрація успішна! Перевірте вашу пошту.");
+        alert("Реєстрація успішна! Перевірте вашу пошту для підтвердження.");
         closeModal();
     }
 }
@@ -121,10 +132,12 @@ function openUserSupportForm() {
 async function submitTicketToDatabase() {
     const msg = document.getElementById('support-text-input').value.trim();
     if (msg.length < 5) return alert("Повідомлення занадто коротке");
+
     const { error } = await sbClient.from('support_tickets').insert([{ 
         user_email: currentUser.email, 
         message: msg 
     }]);
+
     if (error) alert("Помилка: " + error.message);
     else {
         alert("Ваше звернення надіслано!");
@@ -135,6 +148,7 @@ async function submitTicketToDatabase() {
 function openManagementPanel() {
     const modalData = document.getElementById('modal-data');
     let nav = `<button class="adm-nav-item" onclick="switchAdminTab('tickets')">ТИКЕТИ</button>`;
+    
     if (['admin', 'owner'].includes(userRole)) {
         nav += `
             <button class="adm-nav-item" onclick="switchAdminTab('add_game')">+ ГРА</button>
@@ -142,6 +156,7 @@ function openManagementPanel() {
         `;
     }
     if (userRole === 'owner') nav += `<button class="adm-nav-item" onclick="switchAdminTab('users')">ПРАВА</button>`;
+
     modalData.innerHTML = `
         <div style="padding: 25px; color: black; background: white; min-height: 500px;">
             <span class="close-btn-large" onclick="closeModal()">&times;</span>
@@ -156,7 +171,9 @@ function openManagementPanel() {
 
 async function switchAdminTab(tab) {
     const view = document.getElementById('admin-view-port');
+    if (!view) return;
     view.innerHTML = "Завантаження...";
+
     if (tab === 'tickets') {
         const { data } = await sbClient.from('support_tickets').select('*').order('created_at', { ascending: false });
         view.innerHTML = `<h3>Звернення користувачів</h3>` + (data?.length ? data.map(t => `
@@ -166,10 +183,11 @@ async function switchAdminTab(tab) {
                     <span>${new Date(t.created_at).toLocaleDateString()}</span>
                 </div>
                 <p style="margin: 5px 0;">${t.message}</p>
-                <a href="mailto:${t.user_email}" style="color: blue; font-size: 12px;">Відповісти</a>
+                <a href="mailto:${t.user_email}" style="color: blue; font-size: 12px;">Відповісти Email</a>
             </div>
         `).join('') : "<p>Тикетів немає</p>");
     } 
+    
     else if (tab === 'add_game') {
         view.innerHTML = `
             <h3>Додати нову гру</h3>
@@ -182,18 +200,20 @@ async function switchAdminTab(tab) {
                 <option value="Shooter">Shooter</option>
                 <option value="Simulator">Simulator</option>
             </select>
-            <button onclick="saveNewGame()" style="width:100%; padding:10px; background:green; color:white; border:none; cursor:pointer;">ЗБЕРЕГТИ</button>
+            <button onclick="saveNewGame()" style="width:100%; padding:10px; background:green; color:white; border:none; border-radius:5px; cursor:pointer;">ЗБЕРЕГТИ</button>
         `;
     }
+
     else if (tab === 'all_orders') {
         const { data } = await sbClient.from('orders').select('*').order('created_at', { ascending: false });
         view.innerHTML = `<h3>Історія продажів</h3>` + (data?.length ? data.map(o => `
             <div style="font-size:13px; border-bottom:1px solid #ccc; padding:8px 0;">
                 <b>${o.user_email}</b> купив на <span style="color:green;">${o.total_price} грн</span><br>
-                <small>${o.items_names}</small>
+                <small style="color:#555;">${o.items_names}</small>
             </div>
-        `).join('') : "<p>Продажів немає</p>");
+        `).join('') : "<p>Продажів ще не було</p>");
     }
+
     else if (tab === 'users') {
         view.innerHTML = `
             <h3>Керування правами</h3>
@@ -202,7 +222,7 @@ async function switchAdminTab(tab) {
                 <option value="moderator">Модератор</option>
                 <option value="admin">Адміністратор</option>
             </select>
-            <button onclick="assignRole()" style="width:100%; padding:10px; background:#3498db; color:white; border:none; cursor:pointer;">ПРИЗНАЧИТИ РОЛЬ</button>
+            <button onclick="assignRole()" style="width:100%; padding:10px; background:#3498db; color:white; border:none; border-radius:5px; cursor:pointer;">ПРИЗНАЧИТИ РОЛЬ</button>
         `;
     }
 }
@@ -218,7 +238,7 @@ async function saveNewGame() {
     };
     const { error } = await sbClient.from('games').insert([game]);
     if (error) alert(error.message);
-    else { alert("Гру додано!"); location.reload(); }
+    else { alert("Гру успішно додано!"); location.reload(); }
 }
 
 async function assignRole() {
@@ -229,7 +249,7 @@ async function assignRole() {
 }
 
 function addToCartDirect(title, price, img) {
-    if (cart.some(i => i.title === title)) return alert("Вже у кошику!");
+    if (cart.some(i => i.title === title)) return alert("Ця гра вже у кошику!");
     cart.push({ title, price, img });
     saveCart();
     closeModal();
@@ -258,7 +278,9 @@ function renderCart() {
     const count = document.getElementById('cart-count');
     const items = document.getElementById('cart-items');
     const total = document.getElementById('cart-total');
+    
     if (count) count.innerText = cart.length;
+    
     let sum = 0;
     if (items) {
         items.innerHTML = cart.length ? cart.map((item, i) => {
@@ -272,7 +294,7 @@ function renderCart() {
                             <div style="font-size:12px; color:#888;">${item.price} грн</div>
                         </div>
                     </div>
-                    <span onclick="removeFromCart(${i})" style="color:red; cursor:pointer; font-size:20px;">&times;</span>
+                    <span onclick="removeFromCart(${i})" style="color:red; cursor:pointer; font-size:20px; font-weight:bold;">&times;</span>
                 </div>`;
         }).join('') : '<p style="text-align:center; color:#999;">Кошик порожній</p>';
     }
@@ -287,32 +309,40 @@ function removeFromCart(i) {
 async function checkout() {
     if (!currentUser) return toggleAuthModal();
     if (!cart.length) return alert("Кошик порожній!");
+    
     const { error } = await sbClient.from('orders').insert([{
         user_email: currentUser.email,
         items_names: cart.map(i => i.title).join(', '),
         total_price: cart.reduce((s, i) => s + i.price, 0)
     }]);
+
     if (!error) {
         cart = [];
         saveCart();
         window.location.href = CONFIG.DONATE_URL;
     } else {
-        alert("Помилка: " + error.message);
+        alert("Помилка замовлення: " + error.message);
     }
 }
 
 function openDetails(btn) {
     const d = btn.closest('.game-card').dataset;
     const modalData = document.getElementById('modal-data');
+    
     modalData.innerHTML = `
         <div class="modal-layout" style="display:flex;">
             <div class="modal-img-side" style="flex:1;"><img src="${d.img}" style="width:100%; height:100%; object-fit:cover;"></div>
             <div class="modal-info-side" style="flex:1.2; padding:30px; color:black;">
                 <span class="close-btn-large" onclick="closeModal()">&times;</span>
-                <h2>${d.title}</h2>
+                <h2 style="color:black; margin-top:0;">${d.title}</h2>
                 <div class="modal-price" style="font-size:24px; color:#d4af37; font-weight:bold;">${d.price} грн</div>
-                <p>${d.desc}</p>
-                <button class="modal-buy-btn" style="width:100%; padding:15px; background:#4a3427; color:white; border:none; cursor:pointer; font-weight:bold;" onclick="addToCartDirect('${d.title}', ${d.price}, '${d.img}')">В КОШИК</button>
+                <p style="color:#555; line-height: 1.5;">${d.desc}</p>
+                <ul class="modal-specs" style="list-style:none; padding:0; color:#444; margin: 15px 0;">
+                    <li><b>Розробник:</b> ${d.author}</li>
+                    <li><b>Рік:</b> ${d.year}</li>
+                    <li><b>Вимоги:</b> ${d.specs}</li>
+                </ul>
+                <button class="modal-buy-btn" style="width:100%; padding:15px; background:#4a3427; color:white; border:none; cursor:pointer; font-weight:bold; border-radius:8px;" onclick="addToCartDirect('${d.title}', ${d.price}, '${d.img}')">ДОДАТИ В КОШИК</button>
             </div>
         </div>
     `;
@@ -334,32 +364,36 @@ function initFilters() {
 }
 
 function openMainModal() {
-    document.getElementById('details-modal').classList.add('active');
-    document.getElementById('overlay').classList.add('active');
+    const m = document.getElementById('details-modal');
+    const o = document.getElementById('overlay');
+    if (m) m.classList.add('active');
+    if (o) o.classList.add('active');
 }
 
 function closeModal() {
     document.querySelectorAll('.modal, .sidebar').forEach(m => m.classList.remove('active'));
-    const authM = document.getElementById('auth-modal');
-    if (authM) authM.style.display = 'none';
-    document.getElementById('overlay').classList.remove('active');
+    const am = document.getElementById('auth-modal');
+    if (am) am.style.display = 'none';
+    const o = document.getElementById('overlay');
+    if (o) o.classList.remove('active');
 }
 
 function toggleCart() {
     const s = document.getElementById('cart-sidebar');
     const o = document.getElementById('overlay');
-    if (s.classList.contains('active')) {
-        s.classList.remove('active');
-        o.classList.remove('active');
-    } else {
-        s.classList.add('active');
-        o.classList.add('active');
-    }
+    if (s) s.classList.toggle('active');
+    if (o) o.classList.toggle('active');
 }
 
 function toggleAuthModal() {
     const m = document.getElementById('auth-modal');
     const o = document.getElementById('overlay');
-    if (m) m.style.display = 'block';
-    if (o) o.classList.add('active');
+    if (m) {
+        m.style.display = 'block';
+        m.style.zIndex = '10001';
+    }
+    if (o) {
+        o.classList.add('active');
+        o.style.zIndex = '10000';
+    }
 }
