@@ -34,13 +34,11 @@ window.onload = async function() {
         await updateAuthUI();
         renderCart();
         initFilters();
-        
-        injectFavoritesButton();
-        injectSortFilter();
+        updateFavCount();
         attachHeartsToCards();
         
         const observer = new MutationObserver(() => attachHeartsToCards());
-        const target = document.querySelector('.games-grid') || document.querySelector('.catalog-grid') || document.body;
+        const target = document.querySelector('.catalog') || document.body;
         if (target) observer.observe(target, { childList: true, subtree: true });
 
     } catch (err) {
@@ -52,13 +50,11 @@ async function updateAuthUI() {
     const authSect = document.getElementById('auth-section');
     const logoutBtn = document.getElementById('logout-btn');
     const adminBtn = document.getElementById('admin-panel-btn');
-    const supportBtn = document.getElementById('support-btn');
 
     if (!currentUser) {
         if (authSect) authSect.style.display = 'block';
         if (logoutBtn) logoutBtn.style.display = 'none';
         if (adminBtn) adminBtn.style.display = 'none';
-        if (supportBtn) supportBtn.style.display = 'none';
         return;
     }
 
@@ -77,15 +73,7 @@ async function updateAuthUI() {
         if (data) userRole = data.role;
     }
 
-    if (userRole === 'user') {
-        if (supportBtn) {
-            supportBtn.style.display = 'block';
-            supportBtn.innerText = "ДОПОМОГА 🎧";
-            supportBtn.onclick = openUserSupportForm;
-        }
-        if (adminBtn) adminBtn.style.display = 'none';
-    } else {
-        if (supportBtn) supportBtn.style.display = 'none';
+    if (userRole !== 'user') {
         if (adminBtn) {
             adminBtn.style.display = 'block';
             adminBtn.innerText = userRole === 'owner' ? "ВЛАСНИК 👑" : (userRole === 'admin' ? "АДМІН 🛠" : "МОДЕР 🛡");
@@ -114,27 +102,6 @@ async function signOut() {
     await sbClient.auth.signOut();
     localStorage.removeItem('sb-' + CONFIG.SB_URL.split('//')[1].split('.')[0] + '-auth-token');
     location.reload();
-}
-
-function openUserSupportForm() {
-    const modalData = document.getElementById('modal-data');
-    modalData.innerHTML = `
-        <div style="padding: 30px; color: black; background: white; border-radius: 15px;">
-            <span class="close-btn-large" onclick="closeModal()">&times;</span>
-            <h2>Підтримка Olux</h2>
-            <textarea id="support-text-input" placeholder="Опишіть вашу проблему..." style="width: 100%; height: 150px; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 8px; font-size:16px; width: 100%; box-sizing: border-box;"></textarea>
-            <button onclick="submitTicketToDatabase()" style="width: 100%; margin-top: 15px; padding: 15px; background: #f1c40f; border: none; font-weight: bold; cursor: pointer; border-radius: 8px;">ВІДПРАВИТИ</button>
-        </div>
-    `;
-    openMainModal();
-}
-
-async function submitTicketToDatabase() {
-    const msg = document.getElementById('support-text-input').value.trim();
-    if (msg.length < 5) return alert("Занадто коротко");
-    const { error } = await sbClient.from('support_tickets').insert([{ user_email: currentUser.email, message: msg }]);
-    if (error) alert(error.message);
-    else { alert("Надіслано!"); closeModal(); }
 }
 
 function openManagementPanel() {
@@ -327,13 +294,7 @@ function openDetails(btn) {
 }
 
 function initFilters() {
-    const filterContainer = document.querySelector('.filters');
-    if (filterContainer) {
-        filterContainer.style.gap = "8px";
-        filterContainer.style.marginBottom = "20px";
-    }
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        if(!btn.dataset.genre) return;
+    document.querySelectorAll('.filter-btn[data-genre]').forEach(btn => {
         btn.onclick = () => {
             document.querySelector('.filter-btn.active')?.classList.remove('active');
             btn.classList.add('active');
@@ -394,35 +355,9 @@ function toggleAuthModal() {
     }
 }
 
-function injectFavoritesButton() {
-    const nav = document.querySelector('.nav-right') || document.querySelector('header');
-    if (!nav || document.getElementById('favorites-trigger')) return;
-    const btn = document.createElement('div');
-    btn.id = 'favorites-trigger';
-    btn.style.cssText = 'cursor:pointer; color:white; font-weight:bold; margin-right:20px; display:inline-flex; align-items:center; gap:5px;';
-    btn.innerHTML = `<span>Обране ⭐</span> <span id="fav-count">${favorites.length}</span>`;
-    btn.onclick = toggleFavView;
-    nav.prepend(btn);
-}
-
-function injectSortFilter() {
-    const filterRow = document.querySelector('.filters');
-    if (!filterRow || document.getElementById('sort-wrapper')) return;
-    filterRow.style.display = 'flex';
-    filterRow.style.flexWrap = 'wrap';
-    filterRow.style.alignItems = 'center';
-    filterRow.style.gap = '10px';
-
-    const sortContainer = document.createElement('div');
-    sortContainer.id = 'sort-wrapper';
-    sortContainer.innerHTML = `
-        <select id="main-sort-select" onchange="sortGames(this.value)" style="padding:10px; border-radius:8px; border:none; background:#2c3e50; color:white; font-weight:bold; cursor:pointer;">
-            <option value="rating">За рейтингом</option>
-            <option value="cheap">Від дешевих до дорогих</option>
-            <option value="expensive">Від дорогих до дешевих</option>
-        </select>
-    `;
-    filterRow.appendChild(sortContainer);
+function updateFavCount() {
+    const countEl = document.getElementById('fav-count');
+    if (countEl) countEl.innerText = favorites.length;
 }
 
 function attachHeartsToCards() {
@@ -453,16 +388,16 @@ function toggleHeart(title, el) {
         el.style.color = '#f1c40f';
     }
     localStorage.setItem('olux_favs', JSON.stringify(favorites));
-    const countEl = document.getElementById('fav-count');
-    if (countEl) countEl.innerText = favorites.length;
+    updateFavCount();
 }
 
-function toggleFavView() {
+function toggleFavorites() {
     const cards = document.querySelectorAll('.game-card');
-    const trigger = document.getElementById('favorites-trigger');
-    const isFiltering = trigger.classList.toggle('active');
+    const btn = document.getElementById('favorites-btn');
+    const isFiltering = btn.classList.toggle('active');
     
-    trigger.style.color = isFiltering ? '#f1c40f' : 'white';
+    btn.style.background = isFiltering ? '#f1c40f' : '#f0f0f0';
+    btn.style.color = isFiltering ? 'white' : '#333';
     
     cards.forEach(card => {
         if (isFiltering) {
@@ -474,7 +409,7 @@ function toggleFavView() {
 }
 
 function sortGames(criteria) {
-    const container = document.querySelector('.games-grid') || document.querySelector('.catalog-grid') || document.querySelector('#games-list');
+    const container = document.getElementById('catalog-grid');
     if (!container) return;
     const cards = Array.from(container.querySelectorAll('.game-card'));
     
