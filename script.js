@@ -358,21 +358,6 @@ function injectSortAndFavorites() {
     group.style.gap = '10px';
     group.style.marginLeft = 'auto';
 
-    group.innerHTML = `
-        <button id="favorites-trigger" onclick="toggleFavView()" style="padding:10px 15px; border-radius:8px; border:none; background:#2c3e50; color:white; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:5px; transition: 0.3s;">
-            <span style="color:white !important; opacity:1 !important;">Обране ⭐</span>
-            <span id="fav-count" style="color:white !important;">${favorites.length}</span>
-        </button>
-        <select id="main-sort-select" onchange="sortGames(this.value)" style="padding:10px; border-radius:8px; border:none; background:#2c3e50; color:white; font-weight:bold; cursor:pointer;">
-            <option value="rating">Сортування</option>
-            <option value="cheap">Ціна: низька</option>
-            <option value="expensive">Ціна: висока</option>
-            <option value="rating">За рейтингом</option>
-        </select>
-    `;
-    filterRow.appendChild(group);
-}
-
 function applyGlobalFilters() {
     const activeGenre = document.querySelector('.filter-btn.active')?.dataset.genre || 'all';
     const favTrigger = document.getElementById('favorites-trigger');
