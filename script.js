@@ -327,6 +327,10 @@ function openDetails(btn) {
 }
 
 function initFilters() {
+    const filterContainer = document.querySelector('.filters');
+    if (filterContainer) {
+        filterContainer.style.gap = "5px"; 
+    }
     document.querySelectorAll('.filter-btn').forEach(btn => {
         if(!btn.dataset.genre) return;
         btn.onclick = () => {
@@ -394,8 +398,8 @@ function injectFavoritesButton() {
     if (!nav) return;
     const btn = document.createElement('div');
     btn.id = 'favorites-trigger';
-    btn.innerHTML = `Обране ⭐ <span id="fav-count">${favorites.length}</span>`;
-    btn.style.cssText = 'cursor:pointer; color:white; font-weight:bold; margin-right:20px; display:inline-block;';
+    btn.innerHTML = `<span id="fav-text" style="color:white; visibility: visible;">Обране ⭐</span> <span id="fav-count">${favorites.length}</span>`;
+    btn.style.cssText = 'cursor:pointer; color:white; font-weight:bold; margin-right:20px; display:inline-block; font-family: inherit;';
     btn.onclick = toggleFavView;
     nav.prepend(btn);
 }
@@ -410,7 +414,7 @@ function injectSortFilter() {
     const sortContainer = document.createElement('div');
     sortContainer.id = 'sort-wrapper';
     sortContainer.innerHTML = `
-        <select id="main-sort-select" onchange="sortGames(this.value)" style="padding:10px; border-radius:8px; border:none; background:#2c3e50; color:white; font-weight:bold; cursor:pointer;">
+        <select id="main-sort-select" onchange="sortGames(this.value)" style="padding:10px; border-radius:8px; border:none; background:#2c3e50; color:white; font-weight:bold; cursor:pointer; margin-left: 10px;">
             <option value="rating">За рейтингом</option>
             <option value="cheap">Від дешевих до дорогих</option>
             <option value="expensive">Від дорогих до дешевих</option>
