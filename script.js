@@ -329,7 +329,8 @@ function openDetails(btn) {
 function initFilters() {
     const filterContainer = document.querySelector('.filters');
     if (filterContainer) {
-        filterContainer.style.gap = "5px"; 
+        filterContainer.style.gap = "8px";
+        filterContainer.style.marginBottom = "20px";
     }
     document.querySelectorAll('.filter-btn').forEach(btn => {
         if(!btn.dataset.genre) return;
@@ -395,26 +396,27 @@ function toggleAuthModal() {
 
 function injectFavoritesButton() {
     const nav = document.querySelector('.nav-right') || document.querySelector('header');
-    if (!nav) return;
+    if (!nav || document.getElementById('favorites-trigger')) return;
     const btn = document.createElement('div');
     btn.id = 'favorites-trigger';
-    btn.innerHTML = `<span id="fav-text" style="color:white; visibility: visible;">Обране ⭐</span> <span id="fav-count">${favorites.length}</span>`;
-    btn.style.cssText = 'cursor:pointer; color:white; font-weight:bold; margin-right:20px; display:inline-block; font-family: inherit;';
+    btn.style.cssText = 'cursor:pointer; color:white; font-weight:bold; margin-right:20px; display:inline-flex; align-items:center; gap:5px;';
+    btn.innerHTML = `<span>Обране ⭐</span> <span id="fav-count">${favorites.length}</span>`;
     btn.onclick = toggleFavView;
     nav.prepend(btn);
 }
 
 function injectSortFilter() {
     const filterRow = document.querySelector('.filters');
-    if (!filterRow) return;
+    if (!filterRow || document.getElementById('sort-wrapper')) return;
     filterRow.style.display = 'flex';
-    filterRow.style.justifyContent = 'space-between';
+    filterRow.style.flexWrap = 'wrap';
     filterRow.style.alignItems = 'center';
+    filterRow.style.gap = '10px';
 
     const sortContainer = document.createElement('div');
     sortContainer.id = 'sort-wrapper';
     sortContainer.innerHTML = `
-        <select id="main-sort-select" onchange="sortGames(this.value)" style="padding:10px; border-radius:8px; border:none; background:#2c3e50; color:white; font-weight:bold; cursor:pointer; margin-left: 10px;">
+        <select id="main-sort-select" onchange="sortGames(this.value)" style="padding:10px; border-radius:8px; border:none; background:#2c3e50; color:white; font-weight:bold; cursor:pointer;">
             <option value="rating">За рейтингом</option>
             <option value="cheap">Від дешевих до дорогих</option>
             <option value="expensive">Від дорогих до дешевих</option>
@@ -451,7 +453,8 @@ function toggleHeart(title, el) {
         el.style.color = '#f1c40f';
     }
     localStorage.setItem('olux_favs', JSON.stringify(favorites));
-    document.getElementById('fav-count').innerText = favorites.length;
+    const countEl = document.getElementById('fav-count');
+    if (countEl) countEl.innerText = favorites.length;
 }
 
 function toggleFavView() {
