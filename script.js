@@ -34,12 +34,11 @@ window.onload = async function() {
         await updateAuthUI();
         renderCart();
         initFilters();
-        
-        injectSortAndFavorites();
+        updateFavCount();
         attachHeartsToCards();
         
         const observer = new MutationObserver(() => attachHeartsToCards());
-        const target = document.querySelector('.games-grid') || document.querySelector('.catalog-grid') || document.body;
+        const target = document.querySelector('.catalog') || document.body;
         if (target) observer.observe(target, { childList: true, subtree: true });
 
     } catch (err) {
@@ -51,13 +50,11 @@ async function updateAuthUI() {
     const authSect = document.getElementById('auth-section');
     const logoutBtn = document.getElementById('logout-btn');
     const adminBtn = document.getElementById('admin-panel-btn');
-    const supportBtn = document.getElementById('support-btn');
 
     if (!currentUser) {
         if (authSect) authSect.style.display = 'block';
         if (logoutBtn) logoutBtn.style.display = 'none';
         if (adminBtn) adminBtn.style.display = 'none';
-        if (supportBtn) supportBtn.style.display = 'none';
         return;
     }
 
@@ -76,15 +73,7 @@ async function updateAuthUI() {
         if (data) userRole = data.role;
     }
 
-    if (userRole === 'user') {
-        if (supportBtn) {
-            supportBtn.style.display = 'block';
-            supportBtn.innerText = "ДОПОМОГА 🎧";
-            supportBtn.onclick = openUserSupportForm;
-        }
-        if (adminBtn) adminBtn.style.display = 'none';
-    } else {
-        if (supportBtn) supportBtn.style.display = 'none';
+    if (userRole !== 'user') {
         if (adminBtn) {
             adminBtn.style.display = 'block';
             adminBtn.innerText = userRole === 'owner' ? "ВЛАСНИК 👑" : (userRole === 'admin' ? "АДМІН 🛠" : "МОДЕР 🛡");
@@ -113,27 +102,6 @@ async function signOut() {
     await sbClient.auth.signOut();
     localStorage.removeItem('sb-' + CONFIG.SB_URL.split('//')[1].split('.')[0] + '-auth-token');
     location.reload();
-}
-
-function openUserSupportForm() {
-    const modalData = document.getElementById('modal-data');
-    modalData.innerHTML = `
-        <div style="padding: 30px; color: black; background: white; border-radius: 15px;">
-            <span class="close-btn-large" onclick="closeModal()">&times;</span>
-            <h2>Підтримка Olux</h2>
-            <textarea id="support-text-input" placeholder="Опишіть вашу проблему..." style="width: 100%; height: 150px; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 8px; font-size:16px; width: 100%; box-sizing: border-box;"></textarea>
-            <button onclick="submitTicketToDatabase()" style="width: 100%; margin-top: 15px; padding: 15px; background: #f1c40f; border: none; font-weight: bold; cursor: pointer; border-radius: 8px;">ВІДПРАВИТИ</button>
-        </div>
-    `;
-    openMainModal();
-}
-
-async function submitTicketToDatabase() {
-    const msg = document.getElementById('support-text-input').value.trim();
-    if (msg.length < 5) return alert("Занадто коротко");
-    const { error } = await sbClient.from('support_tickets').insert([{ user_email: currentUser.email, message: msg }]);
-    if (error) alert(error.message);
-    else { alert("Надіслано!"); closeModal(); }
 }
 
 function openManagementPanel() {
@@ -326,111 +294,39 @@ function openDetails(btn) {
 }
 
 function initFilters() {
-    const filterContainer = document.querySelector('.filters');
-    if (filterContainer) {
-        filterContainer.style.display = "flex";
-        filterContainer.style.flexWrap = "wrap";
-        filterContainer.style.alignItems = "center";
-        filterContainer.style.gap = "8px";
-        filterContainer.style.marginBottom = "5px";
-        filterContainer.style.padding = "10px 0";
-    }
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        if(!btn.dataset.genre) return;
+    document.querySelectorAll('.filter-btn[data-genre]').forEach(btn => {
         btn.onclick = () => {
-            document.querySelector('.filter-btn.active')?.classList.remove('active');
+            document.querySelector('.filter-btn[data-genre].active')?.classList.remove('active');
             btn.classList.add('active');
-            applyGlobalFilters();
+            filterGames();
         };
     });
-}
-
-function injectSortAndFavorites() {
-    const filterRow = document.querySelector('.filters');
-    if (!filterRow) return;
-
-    if (document.getElementById('fav-sort-group')) return;
-
-    const group = document.createElement('div');
-    group.id = 'fav-sort-group';
-    group.style.display = 'flex';
-    group.style.alignItems = 'center';
-    group.style.gap = '10px';
-    group.style.marginLeft = 'auto';
-
-function applyGlobalFilters() {
-    const activeGenre = document.querySelector('.filter-btn.active')?.dataset.genre || 'all';
-    const favTrigger = document.getElementById('favorites-trigger');
-    const isFavOnly = favTrigger ? favTrigger.classList.contains('active') : false;
     
-    document.querySelectorAll('.game-card').forEach(card => {
-        const matchesGenre = activeGenre === 'all' || card.dataset.genre === activeGenre;
-        const matchesFav = !isFavOnly || favorites.includes(card.dataset.title);
-        card.style.display = (matchesGenre && matchesFav) ? 'block' : 'none';
-    });
-}
-
-function toggleFavView() {
-    const btn = document.getElementById('favorites-trigger');
-    if (!btn) return;
-    
-    const isActive = btn.classList.toggle('active');
-    btn.style.background = isActive ? '#f1c40f' : '#2c3e50';
-    btn.style.color = isActive ? 'black' : 'white';
-    
-    applyGlobalFilters();
-}
-
-function sortGames(criteria) {
-    const container = document.querySelector('.games-grid') || document.querySelector('.catalog-grid');
-    if (!container) return;
-    const cards = Array.from(container.querySelectorAll('.game-card'));
-    
-    cards.sort((a, b) => {
-        const pA = parseFloat(a.dataset.price);
-        const pB = parseFloat(b.dataset.price);
-        const yA = parseInt(a.dataset.year) || 0;
-        const yB = parseInt(b.dataset.year) || 0;
-
-        if (criteria === 'cheap') return pA - pB;
-        if (criteria === 'expensive') return pB - pA;
-        return yB - yA;
-    });
-
-    cards.forEach(card => container.appendChild(card));
-}
-
-function attachHeartsToCards() {
-    const cards = document.querySelectorAll('.game-card');
-    cards.forEach(card => {
-        if (card.querySelector('.heart-btn')) return;
-        const title = card.dataset.title;
-        const isFav = favorites.includes(title);
-        const heart = document.createElement('div');
-        heart.className = 'heart-btn';
-        heart.innerHTML = '❤';
-        heart.style.cssText = `position:absolute; top:10px; right:10px; font-size:24px; cursor:pointer; z-index:10; transition:0.3s; color:${isFav ? '#f1c40f' : '#ccc'};`;
-        heart.onclick = (e) => {
-            e.stopPropagation();
-            toggleHeart(title, heart);
+    const favBtn = document.querySelector('button[onclick="toggleFavorites()"]');
+    if (favBtn) {
+        favBtn.onclick = () => {
+            favBtn.classList.toggle('active');
+            filterGames();
         };
-        card.style.position = 'relative';
-        card.appendChild(heart);
-    });
-}
-
-function toggleHeart(title, el) {
-    if (favorites.includes(title)) {
-        favorites = favorites.filter(t => t !== title);
-        el.style.color = '#ccc';
-    } else {
-        favorites.push(title);
-        el.style.color = '#f1c40f';
     }
-    localStorage.setItem('olux_favs', JSON.stringify(favorites));
-    const countEl = document.getElementById('fav-count');
-    if (countEl) countEl.innerText = favorites.length;
-    applyGlobalFilters();
+}
+
+function filterGames() {
+    const selectedGenre = document.querySelector('.filter-btn[data-genre].active')?.dataset.genre || 'all';
+    const favBtn = document.querySelector('button[onclick="toggleFavorites()"]');
+    const showOnlyFavorites = favBtn?.classList.contains('active') || false;
+    const cards = document.querySelectorAll('.game-card');
+    
+    cards.forEach(card => {
+        const matchesGenre = selectedGenre === 'all' || card.dataset.genre === selectedGenre;
+        const isFavorite = favorites.includes(card.dataset.title);
+        
+        if (showOnlyFavorites) {
+            card.style.display = matchesGenre && isFavorite ? 'block' : 'none';
+        } else {
+            card.style.display = matchesGenre ? 'block' : 'none';
+        }
+    });
 }
 
 function openMainModal() {
@@ -481,4 +377,67 @@ function toggleAuthModal() {
         o.style.zIndex = "10006";
         o.classList.add('active');
     }
+}
+
+function updateFavCount() {
+    const countEl = document.getElementById('fav-count');
+    if (countEl) countEl.innerText = favorites.length;
+}
+
+function attachHeartsToCards() {
+    const cards = document.querySelectorAll('.game-card');
+    cards.forEach(card => {
+        if (card.querySelector('.heart-btn')) return;
+        const title = card.dataset.title;
+        const isFav = favorites.includes(title);
+        const heart = document.createElement('div');
+        heart.className = 'heart-btn';
+        heart.innerHTML = '❤';
+        heart.style.cssText = `position:absolute; top:10px; right:10px; font-size:24px; cursor:pointer; z-index:10; transition:0.3s; color:${isFav ? '#f1c40f' : '#ccc'};`;
+        heart.onclick = (e) => {
+            e.stopPropagation();
+            toggleHeart(title, heart);
+        };
+        card.style.position = 'relative';
+        card.appendChild(heart);
+    });
+}
+
+function toggleHeart(title, el) {
+    if (favorites.includes(title)) {
+        favorites = favorites.filter(t => t !== title);
+        el.style.color = '#ccc';
+    } else {
+        favorites.push(title);
+        el.style.color = '#f1c40f';
+    }
+    localStorage.setItem('olux_favs', JSON.stringify(favorites));
+    updateFavCount();
+    filterGames();
+}
+
+function toggleFavorites() {
+    const btn = event.currentTarget;
+    btn.classList.toggle('active');
+    filterGames();
+}
+
+function sortGames(criteria) {
+    const container = document.getElementById('catalog-grid');
+    if (!container) return;
+    const cards = Array.from(container.querySelectorAll('.game-card'));
+    
+    cards.sort((a, b) => {
+        const pA = parseFloat(a.dataset.price);
+        const pB = parseFloat(b.dataset.price);
+        const yA = parseInt(a.dataset.year) || 0;
+        const yB = parseInt(b.dataset.year) || 0;
+
+        if (criteria === 'cheap') return pA - pB;
+        if (criteria === 'expensive') return pB - pA;
+        if (criteria === 'rating') return yB - yA;
+        return 0;
+    });
+
+    cards.forEach(card => container.appendChild(card));
 }
