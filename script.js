@@ -298,10 +298,20 @@ function initFilters() {
         btn.onclick = () => {
             document.querySelector('.filter-btn.active')?.classList.remove('active');
             btn.classList.add('active');
-            document.querySelectorAll('.game-card').forEach(card => {
-                card.style.display = (btn.dataset.genre === 'all' || card.dataset.genre === btn.dataset.genre) ? 'block' : 'none';
-            });
+            filterGames();
         };
+    });
+}
+
+function filterGames() {
+    const selectedGenre = document.querySelector('.filter-btn[data-genre].active')?.dataset.genre || 'all';
+    const cards = document.querySelectorAll('.game-card');
+    
+    cards.forEach(card => {
+        const matchesGenre = selectedGenre === 'all' || card.dataset.genre === selectedGenre;
+        const matchesFavorites = favorites.includes(card.dataset.title);
+        
+        card.style.display = matchesGenre && matchesFavorites ? 'block' : 'none';
     });
 }
 
@@ -389,23 +399,11 @@ function toggleHeart(title, el) {
     }
     localStorage.setItem('olux_favs', JSON.stringify(favorites));
     updateFavCount();
+    filterGames();
 }
 
 function toggleFavorites() {
-    const cards = document.querySelectorAll('.game-card');
-    const btn = document.getElementById('favorites-btn');
-    const isFiltering = btn.classList.toggle('active');
-    
-    btn.style.background = isFiltering ? '#f1c40f' : '#f0f0f0';
-    btn.style.color = isFiltering ? 'white' : '#333';
-    
-    cards.forEach(card => {
-        if (isFiltering) {
-            card.style.display = favorites.includes(card.dataset.title) ? 'block' : 'none';
-        } else {
-            card.style.display = 'block';
-        }
-    });
+    filterGames();
 }
 
 function sortGames(criteria) {
