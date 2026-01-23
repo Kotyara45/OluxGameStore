@@ -9,6 +9,7 @@ let sbClient = null;
 let currentUser = null;
 let cart = JSON.parse(localStorage.getItem('olux_cart')) || [];
 let userRole = 'user';
+let favorites = JSON.parse(localStorage.getItem('olux_favs')) || [];
 
 window.onload = async function() {
     try {
@@ -33,6 +34,15 @@ window.onload = async function() {
         await updateAuthUI();
         renderCart();
         initFilters();
+        
+        injectFavoritesButton();
+        injectSortFilter();
+        attachHeartsToCards();
+        
+        const observer = new MutationObserver(() => attachHeartsToCards());
+        const target = document.querySelector('.games-grid') || document.querySelector('.catalog-grid') || document.body;
+        if (target) observer.observe(target, { childList: true, subtree: true });
+
     } catch (err) {
         console.error(err.message);
     }
@@ -377,4 +387,101 @@ function toggleAuthModal() {
         o.style.zIndex = "10006";
         o.classList.add('active');
     }
+}
+
+function injectFavoritesButton() {
+    const nav = document.querySelector('.nav-right') || document.querySelector('header');
+    if (!nav) return;
+    const btn = document.createElement('div');
+    btn.id = 'favorites-trigger';
+    btn.innerHTML = `Обране ⭐ <span id="fav-count">${favorites.length}</span>`;
+    btn.style.cssText = 'cursor:pointer; color:white; font-weight:bold; margin-right:20px; display:inline-block;';
+    btn.onclick = toggleFavView;
+    nav.prepend(btn);
+}
+
+function injectSortFilter() {
+    const filterRow = document.querySelector('.filters');
+    if (!filterRow) return;
+    filterRow.style.display = 'flex';
+    filterRow.style.justifyContent = 'space-between';
+    filterRow.style.alignItems = 'center';
+
+    const sortContainer = document.createElement('div');
+    sortContainer.id = 'sort-wrapper';
+    sortContainer.innerHTML = `
+        <select id="main-sort-select" onchange="sortGames(this.value)" style="padding:10px; border-radius:8px; border:none; background:#2c3e50; color:white; font-weight:bold; cursor:pointer;">
+            <option value="rating">За рейтингом</option>
+            <option value="cheap">Від дешевих до дорогих</option>
+            <option value="expensive">Від дорогих до дешевих</option>
+        </select>
+    `;
+    filterRow.appendChild(sortContainer);
+}
+
+function attachHeartsToCards() {
+    const cards = document.querySelectorAll('.game-card');
+    cards.forEach(card => {
+        if (card.querySelector('.heart-btn')) return;
+        const title = card.dataset.title;
+        const isFav = favorites.includes(title);
+        const heart = document.createElement('div');
+        heart.className = 'heart-btn';
+        heart.innerHTML = '❤';
+        heart.style.cssText = `position:absolute; top:10px; right:10px; font-size:24px; cursor:pointer; z-index:10; transition:0.3s; color:${isFav ? '#f1c40f' : '#ccc'};`;
+        heart.onclick = (e) => {
+            e.stopPropagation();
+            toggleHeart(title, heart);
+        };
+        card.style.position = 'relative';
+        card.appendChild(heart);
+    });
+}
+
+function toggleHeart(title, el) {
+    if (favorites.includes(title)) {
+        favorites = favorites.filter(t => t !== title);
+        el.style.color = '#ccc';
+    } else {
+        favorites.push(title);
+        el.style.color = '#f1c40f';
+    }
+    localStorage.setItem('olux_favs', JSON.stringify(favorites));
+    document.getElementById('fav-count').innerText = favorites.length;
+}
+
+function toggleFavView() {
+    const cards = document.querySelectorAll('.game-card');
+    const trigger = document.getElementById('favorites-trigger');
+    const isFiltering = trigger.classList.toggle('active');
+    
+    trigger.style.color = isFiltering ? '#f1c40f' : 'white';
+    
+    cards.forEach(card => {
+        if (isFiltering) {
+            card.style.display = favorites.includes(card.dataset.title) ? 'block' : 'none';
+        } else {
+            card.style.display = 'block';
+        }
+    });
+}
+
+function sortGames(criteria) {
+    const container = document.querySelector('.games-grid') || document.querySelector('.catalog-grid') || document.querySelector('#games-list');
+    if (!container) return;
+    const cards = Array.from(container.querySelectorAll('.game-card'));
+    
+    cards.sort((a, b) => {
+        const pA = parseFloat(a.dataset.price);
+        const pB = parseFloat(b.dataset.price);
+        const yA = parseInt(a.dataset.year) || 0;
+        const yB = parseInt(b.dataset.year) || 0;
+
+        if (criteria === 'cheap') return pA - pB;
+        if (criteria === 'expensive') return pB - pA;
+        if (criteria === 'rating') return yB - yA;
+        return 0;
+    });
+
+    cards.forEach(card => container.appendChild(card));
 }
