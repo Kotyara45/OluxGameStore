@@ -35,6 +35,21 @@
         <button class="filter-btn" data-genre="Shooter">Shooter</button>
         <button class="filter-btn" data-genre="Simulator">Simulator</button>
     </div>
+    <div id="favorites-btn" class="cart-trigger" onclick="toggleFavorites()" style="margin-right: 10px;">
+    ⭐ <span id="fav-count">0</span>
+</div>
+
+<div class="filters">
+    <button class="filter-btn active" data-genre="all">Всі</button>
+    <span style="margin: 0 15px; border-left: 1px solid #ddd;"></span>
+
+    <select id="sort-select" class="filter-btn" onchange="sortGames(this.value)">
+        <option value="default">Сортування</option>
+        <option value="cheap">Від дешевих</option>
+        <option value="expensive">Від дорогих</option>
+        <option value="rating">За рейтингом</option>
+    </select>
+</div>
 
     <main id="catalog-grid" class="catalog">
         <div class="game-card" data-genre="Action" data-title="GTA V" data-price="499" data-author="Rockstar" data-year="2013" data-specs="i5-3470, 8GB, GTX 660" data-img="gta5.jpg" data-desc="Легендарний відкритий світ.">
