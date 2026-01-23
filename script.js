@@ -296,22 +296,36 @@ function openDetails(btn) {
 function initFilters() {
     document.querySelectorAll('.filter-btn[data-genre]').forEach(btn => {
         btn.onclick = () => {
-            document.querySelector('.filter-btn.active')?.classList.remove('active');
+            document.querySelector('.filter-btn[data-genre].active')?.classList.remove('active');
             btn.classList.add('active');
             filterGames();
         };
     });
+    
+    const favBtn = document.querySelector('button[onclick="toggleFavorites()"]');
+    if (favBtn) {
+        favBtn.onclick = () => {
+            favBtn.classList.toggle('active');
+            filterGames();
+        };
+    }
 }
 
 function filterGames() {
     const selectedGenre = document.querySelector('.filter-btn[data-genre].active')?.dataset.genre || 'all';
+    const favBtn = document.querySelector('button[onclick="toggleFavorites()"]');
+    const showOnlyFavorites = favBtn?.classList.contains('active') || false;
     const cards = document.querySelectorAll('.game-card');
     
     cards.forEach(card => {
         const matchesGenre = selectedGenre === 'all' || card.dataset.genre === selectedGenre;
-        const matchesFavorites = favorites.includes(card.dataset.title);
+        const isFavorite = favorites.includes(card.dataset.title);
         
-        card.style.display = matchesGenre && matchesFavorites ? 'block' : 'none';
+        if (showOnlyFavorites) {
+            card.style.display = matchesGenre && isFavorite ? 'block' : 'none';
+        } else {
+            card.style.display = matchesGenre ? 'block' : 'none';
+        }
     });
 }
 
@@ -403,6 +417,8 @@ function toggleHeart(title, el) {
 }
 
 function toggleFavorites() {
+    const btn = event.currentTarget;
+    btn.classList.toggle('active');
     filterGames();
 }
 
