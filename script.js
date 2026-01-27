@@ -43,7 +43,7 @@ window.onload = async function() {
         if (target) observer.observe(target, { childList: true, subtree: true });
 
     } catch (err) {
-        console.error(err.message);
+        console.error("Помилка ініціалізації:", err.message);
     }
 };
 
@@ -96,17 +96,21 @@ async function updateAuthUI() {
 async function signIn() {
     const email = document.getElementById('auth-email').value;
     const password = document.getElementById('auth-password').value;
+    if (!email || !password) return alert("Заповніть всі поля");
+    
     const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
-    if (error) alert(error.message);
+    if (error) alert("Помилка входу: " + error.message);
     else closeModal();
 }
 
 async function signUp() {
     const email = document.getElementById('auth-email').value;
     const password = document.getElementById('auth-password').value;
+    if (!email || !password) return alert("Заповніть всі поля");
+
     const { error } = await sbClient.auth.signUp({ email, password });
-    if (error) alert(error.message);
-    else { alert("Лист надіслано!"); closeModal(); }
+    if (error) alert("Помилка реєстрації: " + error.message);
+    else { alert("Лист для підтвердження надіслано на пошту!"); closeModal(); }
 }
 
 async function signOut() {
@@ -121,7 +125,7 @@ function openUserSupportForm() {
         <div style="padding: 30px; color: black; background: white; border-radius: 15px;">
             <span class="close-btn-large" onclick="closeModal()">&times;</span>
             <h2>Підтримка Olux</h2>
-            <textarea id="support-text-input" placeholder="Опишіть вашу проблему..." style="width: 100%; height: 150px; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 8px; font-size:16px; width: 100%; box-sizing: border-box;"></textarea>
+            <textarea id="support-text-input" placeholder="Опишіть вашу проблему..." style="width: 100%; height: 150px; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 8px; font-size:16px; box-sizing: border-box;"></textarea>
             <button onclick="submitTicketToDatabase()" style="width: 100%; margin-top: 15px; padding: 15px; background: #f1c40f; border: none; font-weight: bold; cursor: pointer; border-radius: 8px;">ВІДПРАВИТИ</button>
         </div>
     `;
@@ -130,10 +134,11 @@ function openUserSupportForm() {
 
 async function submitTicketToDatabase() {
     const msg = document.getElementById('support-text-input').value.trim();
-    if (msg.length < 5) return alert("Занадто коротко");
+    if (msg.length < 5) return alert("Будь ласка, опишіть проблему детальніше");
+    
     const { error } = await sbClient.from('support_tickets').insert([{ user_email: currentUser.email, message: msg }]);
     if (error) alert(error.message);
-    else { alert("Надіслано!"); closeModal(); }
+    else { alert("Надіслано! Ми зв'яжемося з вами."); closeModal(); }
 }
 
 function openManagementPanel() {
@@ -143,8 +148,9 @@ function openManagementPanel() {
         nav += `<button class="adm-nav-item" onclick="switchAdminTab('add_game')">+ ГРА</button><button class="adm-nav-item" onclick="switchAdminTab('all_orders')">ПРОДАЖІ</button>`;
     }
     if (userRole === 'owner') nav += `<button class="adm-nav-item" onclick="switchAdminTab('users')">ПРАВА</button>`;
+    
     modalData.innerHTML = `
-        <div style="padding: 25px; color: black; background: white; border-radius: 15px; width: 100%; box-sizing: border-box; max-height: 80vh; overflow-y: auto;">
+        <div style="padding: 25px; color: black; background: white; border-radius: 15px; width: 100%; box-sizing: border-box; max-height: 85vh; overflow-y: auto;">
             <span class="close-btn-large" onclick="closeModal()">&times;</span>
             <h2 style="margin-bottom: 20px;">ПАНЕЛЬ КЕРУВАННЯ</h2>
             <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">${nav}</div>
@@ -158,6 +164,7 @@ async function switchAdminTab(tab) {
     const view = document.getElementById('admin-view-port');
     if (!view) return;
     view.innerHTML = "Завантаження...";
+    
     if (tab === 'tickets') {
         const { data } = await sbClient.from('support_tickets').select('*').order('created_at', { ascending: false });
         view.innerHTML = `<h3>Тикети підтримки</h3>` + (data?.length ? data.map(t => `<div style="border:1px solid #ccc; padding:15px; margin-bottom:10px; background:#fff; border-radius:8px;"><b>${t.user_email}</b><div style="font-size:12px; color:#777; margin-bottom:5px;">${new Date(t.created_at).toLocaleString()}</div><p>${t.message}</p></div>`).join('') : "Тикетів немає");
@@ -195,25 +202,33 @@ async function switchAdminTab(tab) {
 }
 
 async function saveNewGame() {
+    const title = document.getElementById('g-title').value;
+    const price = parseFloat(document.getElementById('g-price').value);
+    
+    if (!title || isNaN(price)) return alert("Назва та ціна обов'язкові!");
+
     const game = {
-        title: document.getElementById('g-title').value,
-        price: parseFloat(document.getElementById('g-price').value),
+        title: title,
+        price: price,
         img: document.getElementById('g-img').value || 'https://via.placeholder.com/300x400',
         genre: document.getElementById('g-genre').value,
         author: document.getElementById('g-author').value || 'Невідомо',
         year: document.getElementById('g-year').value || '2024',
-        specs: document.getElementById('g-specs').value || 'Мінімальні',
+        specs: document.getElementById('g-specs').value || 'Мінімальні вимоги не вказані',
         desc: document.getElementById('g-desc').value || 'Немає опису'
     };
+
     const { error } = await sbClient.from('games').insert([game]);
-    if (error) alert(error.message);
+    if (error) alert("Помилка при збереженні: " + error.message);
     else { alert("Гру додано до магазину!"); location.reload(); }
 }
 
 async function assignRole() {
     const email = document.getElementById('u-email').value;
     const role = document.getElementById('u-role').value;
-    const { error } = await sbClient.from('admin_status').upsert([{ user_email: email, role: role }]);
+    if (!email) return alert("Введіть email");
+
+    const { error } = await sbClient.from('admin_status').upsert([{ user_email: email, role: role }], { onConflict: 'user_email' });
     if (error) alert(error.message);
     else alert("Роль успішно оновлено для " + email);
 }
@@ -256,19 +271,19 @@ function renderCart() {
         items.innerHTML = cart.length ? cart.map((item, i) => {
             sum += item.price;
             return `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; color:black; background:#fff; padding:15px; border-radius:12px; border:1px solid #ddd; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                    <div style="display:flex; align-items:center; gap:20px;">
-                        <img src="${item.img}" style="width:85px; height:85px; border-radius:10px; object-fit:cover; flex-shrink:0;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; color:black; background:#fff; padding:12px; border-radius:12px; border:1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <img src="${item.img}" style="width:60px; height:60px; border-radius:8px; object-fit:cover; flex-shrink:0;">
                         <div>
-                            <div style="font-size:17px; font-weight:bold; color:#222; margin-bottom:5px;">${item.title}</div>
-                            <div style="font-size:16px; color:#d4af37; font-weight:bold;">${item.price} грн</div>
+                            <div style="font-size:15px; font-weight:bold; color:#222;">${item.title}</div>
+                            <div style="font-size:14px; color:#d4af37; font-weight:bold;">${item.price} грн</div>
                         </div>
                     </div>
-                    <span onclick="removeFromCart(${i})" style="color:#ff4444; cursor:pointer; font-size:32px; padding:10px; font-weight:bold;">&times;</span>
+                    <span onclick="removeFromCart(${i})" style="color:#ff4444; cursor:pointer; font-size:28px; padding:5px; font-weight:bold;">&times;</span>
                 </div>`;
-        }).join('') : '<div style="text-align:center; color:#888; margin-top:60px; font-size:20px;">Ваш кошик порожній</div>';
+        }).join('') : '<div style="text-align:center; color:#888; margin-top:40px; font-size:18px;">Ваш кошик порожній</div>';
     }
-    if (total) total.innerText = sum;
+    if (total) total.innerText = sum.toFixed(2);
 }
 
 function removeFromCart(i) {
@@ -287,10 +302,13 @@ async function checkout() {
         return;
     }
     
+    const totalPrice = cart.reduce((s, i) => s + i.price, 0);
+    const itemsNames = cart.map(i => i.title).join(', ');
+
     const { error } = await sbClient.from('orders').insert([{
         user_email: currentUser.email,
-        items_names: cart.map(i => i.title).join(', '),
-        total_price: cart.reduce((s, i) => s + i.price, 0)
+        items_names: itemsNames,
+        total_price: totalPrice
     }]);
 
     if (!error) {
@@ -298,7 +316,7 @@ async function checkout() {
         saveCart();
         window.location.href = CONFIG.DONATE_URL;
     } else {
-        alert("Помилка: " + error.message);
+        alert("Помилка оформлення: " + error.message);
     }
 }
 
@@ -318,7 +336,7 @@ function openDetails(btn) {
                     <div style="margin-bottom:8px;"><b>РІК ВИПУСКУ:</b> ${d.year}</div>
                     <div style="line-height:1.4;"><b>СИСТЕМНІ ВИМОГИ:</b><br>${d.specs}</div>
                 </div>
-                <button style="width:100%; padding:20px; background:#4a3427; color:white; border:none; cursor:pointer; font-weight:bold; border-radius:12px; font-size:18px; transition: 0.3s;" onclick="addToCartDirect('${d.title}', ${d.price}, '${d.img}')">ДОДАТИ В КОШИК</button>
+                <button style="width:100%; padding:20px; background:#4a3427; color:white; border:none; cursor:pointer; font-weight:bold; border-radius:12px; font-size:18px; transition: 0.3s;" onclick="addToCartDirect('${d.title.replace(/'/g, "\\'")}', ${d.price}, '${d.img}')">ДОДАТИ В КОШИК</button>
             </div>
         </div>
     `;
@@ -331,8 +349,8 @@ function initFilters() {
         filterContainer.style.display = "flex";
         filterContainer.style.flexWrap = "wrap";
         filterContainer.style.alignItems = "center";
-        filterContainer.style.gap = "8px";
-        filterContainer.style.marginBottom = "5px";
+        filterContainer.style.gap = "10px";
+        filterContainer.style.marginBottom = "20px";
         filterContainer.style.padding = "10px 0";
     }
     document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -349,7 +367,8 @@ function injectSortAndFavorites() {
     const filterRow = document.querySelector('.filters');
     if (!filterRow) return;
 
-    if (document.getElementById('fav-sort-group')) return;
+    const oldGroup = document.getElementById('fav-sort-group');
+    if (oldGroup) oldGroup.remove();
 
     const group = document.createElement('div');
     group.id = 'fav-sort-group';
@@ -359,15 +378,16 @@ function injectSortAndFavorites() {
     group.style.marginLeft = 'auto';
 
     group.innerHTML = `
-        <button id="favorites-trigger" onclick="toggleFavView()" style="padding:10px 15px; border-radius:8px; border:none; background:#2c3e50; color:white; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:5px; transition: 0.3s;">
-            <span style="color:white !important; opacity:1 !important;">Обране ⭐</span>
-            <span id="fav-count" style="color:white !important;">${favorites.length}</span>
+        <button id="favorites-trigger" onclick="toggleFavView()" style="padding:10px 15px; border-radius:10px; border:1px solid #ddd; background:white; color:#222; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:8px; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <span style="font-size:18px;">⭐</span>
+            <span>ОБРАНЕ</span>
+            <span id="fav-count" style="background:#f1c40f; color:black; padding:2px 8px; border-radius:15px; font-size:12px;">${favorites.length}</span>
         </button>
-        <select id="main-sort-select" onchange="sortGames(this.value)" style="padding:10px; border-radius:8px; border:none; background:#2c3e50; color:white; font-weight:bold; cursor:pointer;">
-            <option value="rating">Сортування</option>
-            <option value="cheap">Ціна: низька</option>
-            <option value="expensive">Ціна: висока</option>
-            <option value="rating">За рейтингом</option>
+        <select id="main-sort-select" onchange="sortGames(this.value)" style="padding:10px 15px; border-radius:10px; border:1px solid #ddd; background:white; color:#222; font-weight:bold; cursor:pointer; outline:none; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <option value="rating">СОРТУВАННЯ</option>
+            <option value="cheap">ЦІНА: НИЗЬКА</option>
+            <option value="expensive">ЦІНА: ВИСОКА</option>
+            <option value="new">СПОЧАТКУ НОВІ</option>
         </select>
     `;
     filterRow.appendChild(group);
@@ -390,8 +410,8 @@ function toggleFavView() {
     if (!btn) return;
     
     const isActive = btn.classList.toggle('active');
-    btn.style.background = isActive ? '#f1c40f' : '#2c3e50';
-    btn.style.color = isActive ? 'black' : 'white';
+    btn.style.background = isActive ? '#f1c40f' : 'white';
+    btn.style.borderColor = isActive ? '#f1c40f' : '#ddd';
     
     applyGlobalFilters();
 }
@@ -424,7 +444,7 @@ function attachHeartsToCards() {
         const heart = document.createElement('div');
         heart.className = 'heart-btn';
         heart.innerHTML = '❤';
-        heart.style.cssText = `position:absolute; top:10px; right:10px; font-size:24px; cursor:pointer; z-index:10; transition:0.3s; color:${isFav ? '#f1c40f' : '#ccc'};`;
+        heart.style.cssText = `position:absolute; top:10px; right:10px; font-size:24px; cursor:pointer; z-index:10; transition:0.3s; color:${isFav ? '#f1c40f' : '#ccc'}; text-shadow: 0 0 5px rgba(0,0,0,0.2);`;
         heart.onclick = (e) => {
             e.stopPropagation();
             toggleHeart(title, heart);
