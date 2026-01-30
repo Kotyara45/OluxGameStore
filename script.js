@@ -103,6 +103,7 @@ function sortGames(criteria) {
     if (!container) return;
 
     const cards = Array.from(container.querySelectorAll('.game-card'));
+    if (cards.length === 0) return;
 
     cards.sort((a, b) => {
         const priceA = parseFloat(a.dataset.price) || 0;
@@ -116,7 +117,6 @@ function sortGames(criteria) {
         return 0;
     });
 
-    container.innerHTML = '';
     cards.forEach(card => container.appendChild(card));
 }
 
