@@ -29,13 +29,28 @@
     </header>
 
     <div class="filters">
-        <button class="filter-btn active" data-genre="all">Всі</button>
+        <div class="filters-container" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+    <div class="genre-filters" style="display: flex; gap: 10px;">
+        <button class="filter-btn active" data-genre="all">ВСІ</button>
         <button class="filter-btn" data-genre="Action">Action</button>
         <button class="filter-btn" data-genre="RPG">RPG</button>
         <button class="filter-btn" data-genre="Shooter">Shooter</button>
-        <button class="filter-btn" data-genre="Simulator">Simulator</button>
     </div>
 
+    <select id="sort-select" onchange="sortGames(this.value)" style="padding: 10px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;">
+        <option value="default">Сортування</option>
+        <option value="cheap">Від дешевих до дорогих</option>
+        <option value="expensive">Від дорогих до дешевих</option>
+        <option value="new">Спочатку нові</option>
+    </select>
+
+    <div id="fav-ui-wrapper" style="display: none; margin-left: auto;">
+        <button id="favorites-trigger" onclick="toggleFavView()" style="padding: 10px 15px; border-radius: 8px; border: 1px solid #ddd; background: white; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+            <span>⭐ ОБРАНЕ</span>
+            <span id="fav-count" style="background: #f1c40f; padding: 2px 8px; border-radius: 15px; font-size: 12px;">0</span>
+        </button>
+    </div>
+</div>
 </div>
 
     <main id="catalog-grid" class="catalog">
