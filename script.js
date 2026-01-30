@@ -34,13 +34,14 @@ window.onload = async function() {
         await updateAuthUI();
         renderCart();
         initFilters();
-        
         injectSortAndFavorites();
         attachHeartsToCards();
         
         const observer = new MutationObserver(() => attachHeartsToCards());
         const target = document.querySelector('.games-grid') || document.querySelector('.catalog-grid') || document.body;
-        if (target) observer.observe(target, { childList: true, subtree: true });
+        if (target) {
+            observer.observe(target, { childList: true, subtree: true });
+        }
 
     } catch (err) {
         console.error("Помилка ініціалізації:", err.message);
@@ -98,7 +99,7 @@ async function signIn() {
     const password = document.getElementById('auth-password').value;
     if (!email || !password) return alert("Заповніть всі поля");
     
-    const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+    const { error } = await sbClient.auth.signInWithPassword({ email, password });
     if (error) alert("Помилка входу: " + error.message);
     else closeModal();
 }
@@ -110,12 +111,16 @@ async function signUp() {
 
     const { error } = await sbClient.auth.signUp({ email, password });
     if (error) alert("Помилка реєстрації: " + error.message);
-    else { alert("Лист для підтвердження надіслано на пошту!"); closeModal(); }
+    else { 
+        alert("Лист для підтвердження надіслано на пошту!"); 
+        closeModal(); 
+    }
 }
 
 async function signOut() {
     await sbClient.auth.signOut();
-    localStorage.removeItem('sb-' + CONFIG.SB_URL.split('//')[1].split('.')[0] + '-auth-token');
+    const storageKey = 'sb-' + CONFIG.SB_URL.split('//')[1].split('.')[0] + '-auth-token';
+    localStorage.removeItem(storageKey);
     location.reload();
 }
 
@@ -138,7 +143,10 @@ async function submitTicketToDatabase() {
     
     const { error } = await sbClient.from('support_tickets').insert([{ user_email: currentUser.email, message: msg }]);
     if (error) alert(error.message);
-    else { alert("Надіслано! Ми зв'яжемося з вами."); closeModal(); }
+    else { 
+        alert("Надіслано! Ми зв'яжемося з вами."); 
+        closeModal(); 
+    }
 }
 
 function openManagementPanel() {
@@ -167,7 +175,12 @@ async function switchAdminTab(tab) {
     
     if (tab === 'tickets') {
         const { data } = await sbClient.from('support_tickets').select('*').order('created_at', { ascending: false });
-        view.innerHTML = `<h3>Тикети підтримки</h3>` + (data?.length ? data.map(t => `<div style="border:1px solid #ccc; padding:15px; margin-bottom:10px; background:#fff; border-radius:8px;"><b>${t.user_email}</b><div style="font-size:12px; color:#777; margin-bottom:5px;">${new Date(t.created_at).toLocaleString()}</div><p>${t.message}</p></div>`).join('') : "Тикетів немає");
+        view.innerHTML = `<h3>Тикети підтримки</h3>` + (data?.length ? data.map(t => `
+            <div style="border:1px solid #ccc; padding:15px; margin-bottom:10px; background:#fff; border-radius:8px;">
+                <b>${t.user_email}</b>
+                <div style="font-size:12px; color:#777; margin-bottom:5px;">${new Date(t.created_at).toLocaleString()}</div>
+                <p>${t.message}</p>
+            </div>`).join('') : "Тикетів немає");
     } else if (tab === 'add_game') {
         view.innerHTML = `
             <h3>Додати нову гру</h3>
@@ -188,7 +201,13 @@ async function switchAdminTab(tab) {
             <button onclick="saveNewGame()" style="width:100%; padding:15px; background:green; color:white; border:none; cursor:pointer; font-weight:bold; border-radius: 8px;">ОПУБЛІКУВАТИ</button>`;
     } else if (tab === 'all_orders') {
         const { data } = await sbClient.from('orders').select('*').order('created_at', { ascending: false });
-        view.innerHTML = `<h3>Історія замовлень</h3>` + (data?.length ? data.map(o => `<div style="border-bottom:1px solid #ccc; padding:10px 0;"><b>${o.user_email}</b><br><span style="color:#27ae60; font-weight:bold;">${o.total_price} грн</span><br><small>${o.items_names}</small><div style="font-size:10px; color:#999;">${new Date(o.created_at).toLocaleString()}</div></div>`).join('') : "Замовлень немає");
+        view.innerHTML = `<h3>Історія замовлень</h3>` + (data?.length ? data.map(o => `
+            <div style="border-bottom:1px solid #ccc; padding:10px 0;">
+                <b>${o.user_email}</b><br>
+                <span style="color:#27ae60; font-weight:bold;">${o.total_price} грн</span><br>
+                <small>${o.items_names}</small>
+                <div style="font-size:10px; color:#999;">${new Date(o.created_at).toLocaleString()}</div>
+            </div>`).join('') : "Замовлень немає");
     } else if (tab === 'users') {
         view.innerHTML = `
             <h3>Керування правами</h3>
@@ -220,7 +239,10 @@ async function saveNewGame() {
 
     const { error } = await sbClient.from('games').insert([game]);
     if (error) alert("Помилка при збереженні: " + error.message);
-    else { alert("Гру додано до магазину!"); location.reload(); }
+    else { 
+        alert("Гру додано до магазину!"); 
+        location.reload(); 
+    }
 }
 
 async function assignRole() {
