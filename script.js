@@ -102,17 +102,24 @@ function sortGames(criteria) {
     const container = document.querySelector('.games-grid') || document.querySelector('.catalog-grid');
     if (!container) return;
 
-    const cards = Array.from(container.children);
+    const cards = Array.from(container.querySelectorAll('.game-card'));
+    if (cards.length === 0) return;
 
     cards.sort((a, b) => {
-        const priceA = parseFloat(a.dataset.price) || 0;
-        const priceB = parseFloat(b.dataset.price) || 0;
-        const yearA = parseInt(a.dataset.year) || 0;
-        const yearB = parseInt(b.dataset.year) || 0;
+        let valA, valB;
 
-        if (criteria === 'cheap') return priceA - priceB;
-        if (criteria === 'expensive') return priceB - priceA;
-        if (criteria === 'new') return yearB - yearA;
+        if (criteria === 'cheap' || criteria === 'expensive') {
+            valA = parseFloat(a.getAttribute('data-price')) || 0;
+            valB = parseFloat(b.getAttribute('data-price')) || 0;
+            return criteria === 'cheap' ? valA - valB : valB - valA;
+        }
+
+        if (criteria === 'new') {
+            valA = parseInt(a.getAttribute('data-year')) || 0;
+            valB = parseInt(b.getAttribute('data-year')) || 0;
+            return valB - valA;
+        }
+
         return 0;
     });
 
