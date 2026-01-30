@@ -10,6 +10,7 @@ let currentUser = null;
 let cart = JSON.parse(localStorage.getItem('olux_cart')) || [];
 let userRole = 'user';
 let favorites = JSON.parse(localStorage.getItem('olux_favs')) || [];
+let currentAdminTab = 'tickets';
 
 window.onload = async function() {
     try {
@@ -24,13 +25,8 @@ window.onload = async function() {
             updateAuthUI();
         });
 
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('#auth-section button');
-            if (btn && !currentUser) {
-                e.preventDefault();
-                toggleAuthModal();
-            }
-        });
+        // Global Event Listeners (CSP Safe)
+        setupGlobalListeners();
 
         const sortSelect = document.getElementById('sort-select');
         if (sortSelect) {
@@ -51,6 +47,73 @@ window.onload = async function() {
         console.error(err.message);
     }
 };
+
+function setupGlobalListeners() {
+    document.addEventListener('click', async function(e) {
+        // Auth UI
+        if (e.target.closest('#auth-section button') && !currentUser) {
+            e.preventDefault();
+            toggleAuthModal();
+        }
+
+        // Cart Remove
+        const removeBtn = e.target.closest('.cart-remove-btn');
+        if (removeBtn) {
+            removeFromCart(parseInt(removeBtn.dataset.index));
+        }
+
+        // Modal Buy Button
+        const modalBuyBtn = e.target.closest('.modal-buy-btn');
+        if (modalBuyBtn) {
+            const { title, price, img } = modalBuyBtn.dataset;
+            addToCartDirect(title, parseFloat(price), img);
+        }
+
+        // Support Submit
+        if (e.target.id === 'btn-support-submit') {
+            await submitTicketToDatabase();
+        }
+
+        // Admin Tab Switch
+        const tabBtn = e.target.closest('.admin-tab-btn');
+        if (tabBtn) {
+            switchAdminTab(tabBtn.dataset.tab);
+        }
+
+        // Admin Save Game
+        if (e.target.id === 'btn-save-game') {
+            await saveNewGame();
+        }
+
+        // Admin Assign Role
+        if (e.target.id === 'btn-assign-role') {
+            await assignRole();
+        }
+
+        // Add to Cart from Card
+        const cartBtn = e.target.closest('.add-cart-btn'); // Assuming class on card button
+        if (cartBtn) {
+            addToCart(cartBtn);
+        }
+
+        // Open Details
+        const detailsBtn = e.target.closest('.details-btn'); // Assuming class on card button
+        if (detailsBtn) {
+            openDetails(detailsBtn);
+        }
+
+        // Auth Buttons
+        if (e.target.id === 'btn-signin') signIn();
+        if (e.target.id === 'btn-signup') signUp();
+        if (e.target.id === 'logout-btn') signOut();
+        if (e.target.id === 'checkout-btn') checkout();
+        
+        // Close Modal
+        if (e.target.closest('.close-btn-large') || e.target.classList.contains('close-btn-large')) {
+            closeModal();
+        }
+    });
+}
 
 async function updateAuthUI() {
     const authSect = document.getElementById('auth-section');
@@ -170,10 +233,10 @@ function openUserSupportForm() {
     if (!modalData) return;
     modalData.innerHTML = `
         <div style="padding: 30px; color: black; background: white; border-radius: 15px;">
-            <span class="close-btn-large" onclick="closeModal()">&times;</span>
+            <span class="close-btn-large">&times;</span>
             <h2>Підтримка Olux</h2>
             <textarea id="support-text-input" placeholder="Опишіть вашу проблему..." style="width: 100%; height: 150px; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 8px; font-size:16px; box-sizing: border-box;"></textarea>
-            <button onclick="submitTicketToDatabase()" style="width: 100%; margin-top: 15px; padding: 15px; background: #f1c40f; border: none; font-weight: bold; cursor: pointer; border-radius: 8px;">ВІДПРАВИТИ</button>
+            <button id="btn-support-submit" style="width: 100%; margin-top: 15px; padding: 15px; background: #f1c40f; border: none; font-weight: bold; cursor: pointer; border-radius: 8px;">ВІДПРАВИТИ</button>
         </div>
     `;
     openMainModal();
@@ -191,15 +254,15 @@ async function submitTicketToDatabase() {
 function openManagementPanel() {
     const modalData = document.getElementById('modal-data');
     if (!modalData) return;
-    let nav = `<button class="adm-nav-item" onclick="switchAdminTab('tickets')">ТИКЕТИ</button>`;
+    let nav = `<button class="adm-nav-item admin-tab-btn" data-tab="tickets">ТИКЕТИ</button>`;
     if (['admin', 'owner'].includes(userRole)) {
-        nav += `<button class="adm-nav-item" onclick="switchAdminTab('add_game')">+ ГРА</button><button class="adm-nav-item" onclick="switchAdminTab('all_orders')">ПРОДАЖІ</button>`;
+        nav += `<button class="adm-nav-item admin-tab-btn" data-tab="add_game">+ ГРА</button><button class="adm-nav-item admin-tab-btn" data-tab="all_orders">ПРОДАЖІ</button>`;
     }
-    if (userRole === 'owner') nav += `<button class="adm-nav-item" onclick="switchAdminTab('users')">ПРАВА</button>`;
+    if (userRole === 'owner') nav += `<button class="adm-nav-item admin-tab-btn" data-tab="users">ПРАВА</button>`;
     
     modalData.innerHTML = `
         <div style="padding: 25px; color: black; background: white; border-radius: 15px; width: 100%; box-sizing: border-box; max-height: 85vh; overflow-y: auto;">
-            <span class="close-btn-large" onclick="closeModal()">&times;</span>
+            <span class="close-btn-large">&times;</span>
             <h2 style="margin-bottom: 20px;">ПАНЕЛЬ КЕРУВАННЯ</h2>
             <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">${nav}</div>
             <div id="admin-view-port" style="background: #f1f1f1; padding: 20px; border-radius: 10px; min-height: 300px;"></div>
@@ -229,7 +292,7 @@ async function switchAdminTab(tab) {
             <select id="g-genre" style="width:100%; margin-bottom:15px; padding:12px; box-sizing: border-box;">
                 <option value="Action">Action</option><option value="RPG">RPG</option><option value="Shooter">Shooter</option><option value="Simulator">Simulator</option><option value="Strategy">Strategy</option>
             </select>
-            <button onclick="saveNewGame()" style="width:100%; padding:15px; background:green; color:white; border:none; border-radius: 8px;">ОПУБЛІКУВАТИ</button>`;
+            <button id="btn-save-game" style="width:100%; padding:15px; background:green; color:white; border:none; border-radius: 8px;">ОПУБЛІКУВАТИ</button>`;
     } else if (tab === 'all_orders') {
         const { data } = await sbClient.from('orders').select('*').order('created_at', { ascending: false });
         view.innerHTML = `<h3>Продажі</h3>` + (data?.length ? data.map(o => `<div style="border-bottom:1px solid #ccc; padding:10px 0;"><b>${o.user_email}</b>: ${o.total_price} грн<br><small>${o.items_names}</small></div>`).join('') : "Немає");
@@ -240,7 +303,7 @@ async function switchAdminTab(tab) {
             <select id="u-role" style="width:100%; margin-bottom:15px; padding:12px; box-sizing: border-box;">
                 <option value="moderator">Модератор</option><option value="admin">Адміністратор</option>
             </select>
-            <button onclick="assignRole()" style="width:100%; padding:15px; background:#2980b9; color:white; border:none; border-radius: 8px;">ЗМІНИТИ</button>`;
+            <button id="btn-assign-role" style="width:100%; padding:15px; background:#2980b9; color:white; border:none; border-radius: 8px;">ЗМІНИТИ</button>`;
     }
 }
 
@@ -314,7 +377,7 @@ function renderCart() {
                             <div style="font-size:14px; color:#d4af37;">${item.price} грн</div>
                         </div>
                     </div>
-                    <span onclick="removeFromCart(${i})" style="color:#ff4444; cursor:pointer; font-size:28px;">&times;</span>
+                    <span class="cart-remove-btn" data-index="${i}" style="color:#ff4444; cursor:pointer; font-size:28px;">&times;</span>
                 </div>`;
         }).join('') : '<div style="text-align:center; color:#888; margin-top:40px;">Кошик порожній</div>';
     }
@@ -356,7 +419,7 @@ function openDetails(btn) {
         <div style="display:flex; flex-wrap:wrap; background:white; border-radius:15px; overflow:hidden; width: 100%; max-width: 900px;">
             <div style="flex:1; min-width:300px;"><img src="${d.img}" style="width:100%; height:100%; object-fit:cover;"></div>
             <div style="flex:1.2; padding:35px; color:black; min-width:300px; position:relative;">
-                <span class="close-btn-large" onclick="closeModal()" style="position:absolute; right:20px; top:10px; font-size:35px; cursor:pointer;">&times;</span>
+                <span class="close-btn-large" style="position:absolute; right:20px; top:10px; font-size:35px; cursor:pointer;">&times;</span>
                 <h2 style="margin-top:0;">${d.title}</h2>
                 <div style="font-size:28px; color:#d4af37; font-weight:bold; margin-bottom:20px;">${d.price} грн</div>
                 <p style="margin-bottom:25px; color:#444;">${d.desc}</p>
@@ -365,7 +428,7 @@ function openDetails(btn) {
                     <div><b>РІК:</b> ${d.year}</div>
                     <div><b>ВИМОГИ:</b><br>${d.specs}</div>
                 </div>
-                <button style="width:100%; padding:20px; background:#4a3427; color:white; border:none; cursor:pointer; font-weight:bold; border-radius:12px;" onclick="addToCartDirect('${d.title.replace(/'/g, "\\'")}', ${d.price}, '${d.img}')">В КОШИК</button>
+                <button class="modal-buy-btn" data-title="${d.title.replace(/"/g, '&quot;')}" data-price="${d.price}" data-img="${d.img}" style="width:100%; padding:20px; background:#4a3427; color:white; border:none; cursor:pointer; font-weight:bold; border-radius:12px;">В КОШИК</button>
             </div>
         </div>
     `;
