@@ -36,7 +36,7 @@ window.onload = async function() {
         await updateAuthUI();
         renderCart();
         initFilters();
-        injectFavoritesOnly();
+        updateFavCount();
         attachHeartsToCards();
         
         const observer = new MutationObserver(() => attachHeartsToCards());
@@ -53,17 +53,23 @@ async function updateAuthUI() {
     const logoutBtn = document.getElementById('logout-btn');
     const adminBtn = document.getElementById('admin-panel-btn');
     const supportBtn = document.getElementById('support-btn');
+    const favWrapper = document.getElementById('fav-ui-wrapper');
 
     if (!currentUser) {
         if (authSect) authSect.style.display = 'block';
         if (logoutBtn) logoutBtn.style.display = 'none';
         if (adminBtn) adminBtn.style.display = 'none';
         if (supportBtn) supportBtn.style.display = 'none';
+        if (favWrapper) favWrapper.style.display = 'none';
+        // Примусово ховаємо серця на картках, якщо юзер вийшов
+        document.querySelectorAll('.heart-btn').forEach(h => h.style.display = 'none');
         return;
     }
 
     if (authSect) authSect.style.display = 'none';
     if (logoutBtn) logoutBtn.style.display = 'block';
+    if (favWrapper) favWrapper.style.display = 'block';
+    document.querySelectorAll('.heart-btn').forEach(h => h.style.display = 'block');
 
     userRole = 'user';
     if (currentUser.email === CONFIG.OWNER_EMAIL) {
@@ -92,6 +98,27 @@ async function updateAuthUI() {
             adminBtn.onclick = openManagementPanel;
         }
     }
+}
+
+function sortGames(criteria) {
+    const container = document.querySelector('.games-grid') || document.querySelector('.catalog-grid');
+    if (!container) return;
+
+    const cards = Array.from(container.querySelectorAll('.game-card'));
+
+    cards.sort((a, b) => {
+        const priceA = parseFloat(a.dataset.price) || 0;
+        const priceB = parseFloat(b.dataset.price) || 0;
+        const yearA = parseInt(a.dataset.year) || 0;
+        const yearB = parseInt(b.dataset.year) || 0;
+
+        if (criteria === 'cheap') return priceA - priceB;
+        if (criteria === 'expensive') return priceB - priceA;
+        if (criteria === 'new') return yearB - yearA;
+        return 0;
+    });
+
+    cards.forEach(card => container.appendChild(card));
 }
 
 async function signIn() {
@@ -337,27 +364,10 @@ function initFilters() {
     });
 }
 
-function injectFavoritesOnly() {
-    const filterRow = document.querySelector('.filters');
-    if (!filterRow) return;
-    const old = document.getElementById('fav-group');
-    if (old) old.remove();
-
-    const group = document.createElement('div');
-    group.id = 'fav-group';
-    group.style.marginLeft = 'auto';
-    group.innerHTML = `
-        <button id="favorites-trigger" onclick="toggleFavView()" style="padding:10px 15px; border-radius:10px; border:1px solid #ddd; background:white; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:8px;">
-            <span>⭐ ОБРАНЕ</span>
-            <span id="fav-count" style="background:#f1c40f; padding:2px 8px; border-radius:15px;">${favorites.length}</span>
-        </button>
-    `;
-    filterRow.appendChild(group);
-}
-
 function applyGlobalFilters() {
     const activeGenre = document.querySelector('.filter-btn.active')?.dataset.genre || 'all';
-    const isFavOnly = document.getElementById('favorites-trigger')?.classList.contains('active');
+    const trigger = document.getElementById('favorites-trigger');
+    const isFavOnly = trigger ? trigger.classList.contains('active') : false;
     
     document.querySelectorAll('.game-card').forEach(card => {
         const mG = activeGenre === 'all' || card.dataset.genre === activeGenre;
@@ -376,13 +386,17 @@ function toggleFavView() {
 
 function attachHeartsToCards() {
     document.querySelectorAll('.game-card').forEach(card => {
-        if (card.querySelector('.heart-btn')) return;
+        if (card.querySelector('.heart-btn')) {
+            const h = card.querySelector('.heart-btn');
+            h.style.display = currentUser ? 'block' : 'none';
+            return;
+        }
         const title = card.dataset.title;
         const isFav = favorites.includes(title);
         const heart = document.createElement('div');
         heart.className = 'heart-btn';
         heart.innerHTML = '❤';
-        heart.style.cssText = `position:absolute; top:10px; right:10px; font-size:24px; cursor:pointer; z-index:10; color:${isFav ? '#f1c40f' : '#ccc'};`;
+        heart.style.cssText = `position:absolute; top:10px; right:10px; font-size:24px; cursor:pointer; z-index:10; color:${isFav ? '#f1c40f' : '#ccc'}; display:${currentUser ? 'block' : 'none'};`;
         heart.onclick = (e) => { e.stopPropagation(); toggleHeart(title, heart); };
         card.style.position = 'relative';
         card.appendChild(heart);
@@ -390,6 +404,7 @@ function attachHeartsToCards() {
 }
 
 function toggleHeart(title, el) {
+    if (!currentUser) return;
     if (favorites.includes(title)) {
         favorites = favorites.filter(t => t !== title);
         el.style.color = '#ccc';
@@ -398,9 +413,13 @@ function toggleHeart(title, el) {
         el.style.color = '#f1c40f';
     }
     localStorage.setItem('olux_favs', JSON.stringify(favorites));
+    updateFavCount();
+    applyGlobalFilters();
+}
+
+function updateFavCount() {
     const countEl = document.getElementById('fav-count');
     if (countEl) countEl.innerText = favorites.length;
-    applyGlobalFilters();
 }
 
 function openMainModal() {
