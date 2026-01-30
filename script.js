@@ -13,9 +13,16 @@ let favorites = JSON.parse(localStorage.getItem('olux_favs')) || [];
 
 window.onload = async function() {
     try {
+        if (typeof supabase === 'undefined') {
+            console.error("Supabase library not loaded!");
+            return;
+        }
+
         sbClient = supabase.createClient(CONFIG.SB_URL, CONFIG.SB_KEY);
         
-        const { data: { session } } = await sbClient.auth.getSession();
+        const { data: { session }, error: sessionError } = await sbClient.auth.getSession();
+        if (sessionError) throw sessionError;
+        
         currentUser = session?.user || null;
 
         sbClient.auth.onAuthStateChange((event, session) => {
@@ -69,12 +76,16 @@ async function updateAuthUI() {
     if (currentUser.email === CONFIG.OWNER_EMAIL) {
         userRole = 'owner';
     } else {
-        const { data } = await sbClient
-            .from('admin_status')
-            .select('role')
-            .eq('user_email', currentUser.email)
-            .maybeSingle();
-        if (data) userRole = data.role;
+        try {
+            const { data } = await sbClient
+                .from('admin_status')
+                .select('role')
+                .eq('user_email', currentUser.email)
+                .maybeSingle();
+            if (data) userRole = data.role;
+        } catch (e) {
+            console.error("Role fetch error:", e.message);
+        }
     }
 
     if (userRole === 'user') {
@@ -119,13 +130,12 @@ async function signUp() {
 
 async function signOut() {
     await sbClient.auth.signOut();
-    const storageKey = 'sb-' + CONFIG.SB_URL.split('//')[1].split('.')[0] + '-auth-token';
-    localStorage.removeItem(storageKey);
     location.reload();
 }
 
 function openUserSupportForm() {
     const modalData = document.getElementById('modal-data');
+    if (!modalData) return;
     modalData.innerHTML = `
         <div style="padding: 30px; color: black; background: white; border-radius: 15px;">
             <span class="close-btn-large" onclick="closeModal()">&times;</span>
@@ -151,6 +161,7 @@ async function submitTicketToDatabase() {
 
 function openManagementPanel() {
     const modalData = document.getElementById('modal-data');
+    if (!modalData) return;
     let nav = `<button class="adm-nav-item" onclick="switchAdminTab('tickets')">ТИКЕТИ</button>`;
     if (['admin', 'owner'].includes(userRole)) {
         nav += `<button class="adm-nav-item" onclick="switchAdminTab('add_game')">+ ГРА</button><button class="adm-nav-item" onclick="switchAdminTab('all_orders')">ПРОДАЖІ</button>`;
@@ -265,6 +276,7 @@ function addToCartDirect(title, price, img) {
 
 function addToCart(btn) {
     const c = btn.closest('.game-card');
+    if (!c) return;
     const g = { 
         title: c.dataset.title, 
         price: parseFloat(c.dataset.price), 
@@ -343,8 +355,11 @@ async function checkout() {
 }
 
 function openDetails(btn) {
-    const d = btn.closest('.game-card').dataset;
+    const c = btn.closest('.game-card');
+    if (!c) return;
+    const d = c.dataset;
     const modalData = document.getElementById('modal-data');
+    if (!modalData) return;
     modalData.innerHTML = `
         <div style="display:flex; flex-wrap:wrap; background:white; border-radius:15px; overflow:hidden; width: 100%; max-width: 900px;">
             <div style="flex:1; min-width:300px;"><img src="${d.img}" style="width:100%; height:100%; object-fit:cover;"></div>
