@@ -32,6 +32,11 @@ window.onload = async function() {
             }
         });
 
+        const sortSelect = document.getElementById('sort-select');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', (e) => sortGames(e.target.value));
+        }
+
         await updateAuthUI();
         renderCart();
         initFilters();
@@ -98,6 +103,21 @@ async function updateAuthUI() {
     attachHeartsToCards();
 }
 
+function getPrice(card) {
+    let p = card.getAttribute('data-price') || card.dataset.price;
+    if (!p) {
+        const text = card.innerText || "";
+        const match = text.match(/(\d+([.,]\d+)?)/);
+        if (match) p = match[0].replace(',', '.');
+    }
+    return parseFloat(p) || 0;
+}
+
+function getYear(card) {
+    let y = card.getAttribute('data-year') || card.dataset.year;
+    return parseInt(y) || 0;
+}
+
 function sortGames(criteria) {
     const container = document.querySelector('.games-grid') || document.querySelector('.catalog-grid');
     if (!container) return;
@@ -106,24 +126,17 @@ function sortGames(criteria) {
     if (cards.length === 0) return;
 
     cards.sort((a, b) => {
-        let valA, valB;
+        const pA = getPrice(a);
+        const pB = getPrice(b);
+        const yA = getYear(a);
+        const yB = getYear(b);
 
-        if (criteria === 'cheap' || criteria === 'expensive') {
-            valA = parseFloat(a.getAttribute('data-price')) || 0;
-            valB = parseFloat(b.getAttribute('data-price')) || 0;
-            return criteria === 'cheap' ? valA - valB : valB - valA;
-        }
-
-        if (criteria === 'new') {
-            valA = parseInt(a.getAttribute('data-year')) || 0;
-            valB = parseInt(b.getAttribute('data-year')) || 0;
-            return valB - valA;
-        }
-
+        if (criteria === 'cheap') return pA - pB;
+        if (criteria === 'expensive') return pB - pA;
+        if (criteria === 'new') return yB - yA;
         return 0;
     });
 
-    container.innerHTML = '';
     cards.forEach(card => container.appendChild(card));
 }
 
