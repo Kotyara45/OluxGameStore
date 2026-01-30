@@ -102,16 +102,16 @@ function sortGames(criteria) {
     const container = document.querySelector('.games-grid') || document.querySelector('.catalog-grid');
     if (!container) return;
 
-    const cards = Array.from(container.children);
+    const cards = Array.from(container.querySelectorAll('.game-card'));
 
     cards.sort((a, b) => {
-        const valA = parseFloat(a.getAttribute('data-price')) || 0;
-        const valB = parseFloat(b.getAttribute('data-price')) || 0;
-        const yearA = parseInt(a.getAttribute('data-year')) || 0;
-        const yearB = parseInt(b.getAttribute('data-year')) || 0;
+        const priceA = parseFloat(a.dataset.price) || 0;
+        const priceB = parseFloat(b.dataset.price) || 0;
+        const yearA = parseInt(a.dataset.year) || 0;
+        const yearB = parseInt(b.dataset.year) || 0;
 
-        if (criteria === 'cheap') return valA - valB;
-        if (criteria === 'expensive') return valB - valA;
+        if (criteria === 'cheap') return priceA - priceB;
+        if (criteria === 'expensive') return priceB - priceA;
         if (criteria === 'new') return yearB - yearA;
         return 0;
     });
@@ -364,7 +364,8 @@ function initFilters() {
 
 function applyGlobalFilters() {
     const activeGenre = document.querySelector('.filter-btn.active')?.dataset.genre || 'all';
-    const isFavOnly = document.getElementById('favorites-trigger')?.classList.contains('active');
+    const trigger = document.getElementById('favorites-trigger');
+    const isFavOnly = trigger ? trigger.classList.contains('active') : false;
     
     document.querySelectorAll('.game-card').forEach(card => {
         const mG = activeGenre === 'all' || card.dataset.genre === activeGenre;
