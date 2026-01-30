@@ -10,27 +10,36 @@ let currentUser = null;
 let cart = JSON.parse(localStorage.getItem('olux_cart')) || [];
 let userRole = 'user';
 let favorites = JSON.parse(localStorage.getItem('olux_favs')) || [];
-let currentAdminTab = 'tickets';
 
 window.onload = async function() {
+    console.log('Olux System Loaded');
     try {
-        if (typeof supabase === 'undefined') return;
+        if (typeof supabase === 'undefined') {
+            console.error('Supabase library not loaded');
+            return;
+        }
         sbClient = supabase.createClient(CONFIG.SB_URL, CONFIG.SB_KEY);
         
         const { data: { session } } = await sbClient.auth.getSession();
         currentUser = session?.user || null;
+        console.log('User status:', currentUser ? 'Logged in' : 'Guest');
 
         sbClient.auth.onAuthStateChange((event, session) => {
             currentUser = session?.user || null;
             updateAuthUI();
         });
 
-        // Global Event Listeners (CSP Safe)
         setupGlobalListeners();
 
         const sortSelect = document.getElementById('sort-select');
         if (sortSelect) {
-            sortSelect.addEventListener('change', (e) => sortGames(e.target.value));
+            console.log('Sort select found');
+            sortSelect.addEventListener('change', (e) => {
+                console.log('Sorting changed to:', e.target.value);
+                sortGames(e.target.value);
+            });
+        } else {
+            console.warn('Sort select element NOT found (id="sort-select")');
         }
 
         await updateAuthUI();
@@ -44,72 +53,72 @@ window.onload = async function() {
         if (target) observer.observe(target, { childList: true, subtree: true });
 
     } catch (err) {
-        console.error(err.message);
+        console.error('Critical Error:', err.message);
     }
 };
 
 function setupGlobalListeners() {
     document.addEventListener('click', async function(e) {
-        // Auth UI
-        if (e.target.closest('#auth-section button') && !currentUser) {
+        const target = e.target;
+        
+        if (target.closest('#auth-section button') && !currentUser) {
             e.preventDefault();
             toggleAuthModal();
+            return;
         }
 
-        // Cart Remove
-        const removeBtn = e.target.closest('.cart-remove-btn');
+        const removeBtn = target.closest('.cart-remove-btn');
         if (removeBtn) {
             removeFromCart(parseInt(removeBtn.dataset.index));
+            return;
         }
 
-        // Modal Buy Button
-        const modalBuyBtn = e.target.closest('.modal-buy-btn');
+        const modalBuyBtn = target.closest('.modal-buy-btn');
         if (modalBuyBtn) {
             const { title, price, img } = modalBuyBtn.dataset;
             addToCartDirect(title, parseFloat(price), img);
+            return;
         }
 
-        // Support Submit
-        if (e.target.id === 'btn-support-submit') {
+        if (target.id === 'btn-support-submit') {
             await submitTicketToDatabase();
+            return;
         }
 
-        // Admin Tab Switch
-        const tabBtn = e.target.closest('.admin-tab-btn');
+        const tabBtn = target.closest('.admin-tab-btn');
         if (tabBtn) {
             switchAdminTab(tabBtn.dataset.tab);
+            return;
         }
 
-        // Admin Save Game
-        if (e.target.id === 'btn-save-game') {
+        if (target.id === 'btn-save-game') {
             await saveNewGame();
+            return;
         }
 
-        // Admin Assign Role
-        if (e.target.id === 'btn-assign-role') {
+        if (target.id === 'btn-assign-role') {
             await assignRole();
+            return;
         }
 
-        // Add to Cart from Card
-        const cartBtn = e.target.closest('.add-cart-btn'); // Assuming class on card button
+        const cartBtn = target.closest('.add-cart-btn') || target.closest('.buy-btn'); 
         if (cartBtn) {
             addToCart(cartBtn);
+            return;
         }
 
-        // Open Details
-        const detailsBtn = e.target.closest('.details-btn'); // Assuming class on card button
+        const detailsBtn = target.closest('.details-btn') || target.closest('.game-card img') || target.closest('.game-card h3');
         if (detailsBtn) {
             openDetails(detailsBtn);
+            return;
         }
 
-        // Auth Buttons
-        if (e.target.id === 'btn-signin') signIn();
-        if (e.target.id === 'btn-signup') signUp();
-        if (e.target.id === 'logout-btn') signOut();
-        if (e.target.id === 'checkout-btn') checkout();
+        if (target.id === 'btn-signin') signIn();
+        if (target.id === 'btn-signup') signUp();
+        if (target.id === 'logout-btn') signOut();
+        if (target.id === 'checkout-btn') checkout();
         
-        // Close Modal
-        if (e.target.closest('.close-btn-large') || e.target.classList.contains('close-btn-large')) {
+        if (target.closest('.close-btn-large') || target.classList.contains('close-btn-large')) {
             closeModal();
         }
     });
@@ -167,7 +176,7 @@ async function updateAuthUI() {
 }
 
 function getPrice(card) {
-    let p = card.getAttribute('data-price') || card.dataset.price;
+    let p = card.getAttribute('data-price');
     if (!p) {
         const text = card.innerText || "";
         const match = text.match(/(\d+([.,]\d+)?)/);
@@ -177,16 +186,27 @@ function getPrice(card) {
 }
 
 function getYear(card) {
-    let y = card.getAttribute('data-year') || card.dataset.year;
+    let y = card.getAttribute('data-year');
+    if (!y) {
+         const text = card.innerText || "";
+         const match = text.match(/20\d{2}/); 
+         if (match) y = match[0];
+    }
     return parseInt(y) || 0;
 }
 
 function sortGames(criteria) {
     const container = document.querySelector('.games-grid') || document.querySelector('.catalog-grid');
-    if (!container) return;
+    if (!container) {
+        console.error('Container .games-grid or .catalog-grid not found');
+        return;
+    }
 
-    const cards = Array.from(container.querySelectorAll('.game-card'));
-    if (cards.length === 0) return;
+    const cards = Array.from(container.children).filter(c => c.classList.contains('game-card'));
+    if (cards.length === 0) {
+        console.warn('No .game-card elements found inside container');
+        return;
+    }
 
     cards.sort((a, b) => {
         const pA = getPrice(a);
@@ -200,7 +220,9 @@ function sortGames(criteria) {
         return 0;
     });
 
+    container.innerHTML = '';
     cards.forEach(card => container.appendChild(card));
+    console.log(`Sorted ${cards.length} cards by ${criteria}`);
 }
 
 async function signIn() {
