@@ -13,16 +13,11 @@ let favorites = JSON.parse(localStorage.getItem('olux_favs')) || [];
 
 window.onload = async function() {
     try {
-        if (typeof supabase === 'undefined') {
-            console.error("Supabase library not loaded!");
-            return;
-        }
+        if (typeof supabase === 'undefined') return;
 
         sbClient = supabase.createClient(CONFIG.SB_URL, CONFIG.SB_KEY);
         
-        const { data: { session }, error: sessionError } = await sbClient.auth.getSession();
-        if (sessionError) throw sessionError;
-        
+        const { data: { session } } = await sbClient.auth.getSession();
         currentUser = session?.user || null;
 
         sbClient.auth.onAuthStateChange((event, session) => {
@@ -41,17 +36,15 @@ window.onload = async function() {
         await updateAuthUI();
         renderCart();
         initFilters();
-        injectSortAndFavorites();
+        injectFavoritesOnly();
         attachHeartsToCards();
         
         const observer = new MutationObserver(() => attachHeartsToCards());
         const target = document.querySelector('.games-grid') || document.querySelector('.catalog-grid') || document.body;
-        if (target) {
-            observer.observe(target, { childList: true, subtree: true });
-        }
+        if (target) observer.observe(target, { childList: true, subtree: true });
 
     } catch (err) {
-        console.error("Помилка ініціалізації:", err.message);
+        console.error(err.message);
     }
 };
 
@@ -76,16 +69,12 @@ async function updateAuthUI() {
     if (currentUser.email === CONFIG.OWNER_EMAIL) {
         userRole = 'owner';
     } else {
-        try {
-            const { data } = await sbClient
-                .from('admin_status')
-                .select('role')
-                .eq('user_email', currentUser.email)
-                .maybeSingle();
-            if (data) userRole = data.role;
-        } catch (e) {
-            console.error("Role fetch error:", e.message);
-        }
+        const { data } = await sbClient
+            .from('admin_status')
+            .select('role')
+            .eq('user_email', currentUser.email)
+            .maybeSingle();
+        if (data) userRole = data.role;
     }
 
     if (userRole === 'user') {
@@ -111,7 +100,7 @@ async function signIn() {
     if (!email || !password) return alert("Заповніть всі поля");
     
     const { error } = await sbClient.auth.signInWithPassword({ email, password });
-    if (error) alert("Помилка входу: " + error.message);
+    if (error) alert(error.message);
     else closeModal();
 }
 
@@ -121,11 +110,8 @@ async function signUp() {
     if (!email || !password) return alert("Заповніть всі поля");
 
     const { error } = await sbClient.auth.signUp({ email, password });
-    if (error) alert("Помилка реєстрації: " + error.message);
-    else { 
-        alert("Лист для підтвердження надіслано на пошту!"); 
-        closeModal(); 
-    }
+    if (error) alert(error.message);
+    else { alert("Лист для підтвердження надіслано на пошту!"); closeModal(); }
 }
 
 async function signOut() {
@@ -149,14 +135,11 @@ function openUserSupportForm() {
 
 async function submitTicketToDatabase() {
     const msg = document.getElementById('support-text-input').value.trim();
-    if (msg.length < 5) return alert("Будь ласка, опишіть проблему детальніше");
+    if (msg.length < 5) return alert("Опишіть детальніше");
     
     const { error } = await sbClient.from('support_tickets').insert([{ user_email: currentUser.email, message: msg }]);
     if (error) alert(error.message);
-    else { 
-        alert("Надіслано! Ми зв'яжемося з вами."); 
-        closeModal(); 
-    }
+    else { alert("Надіслано!"); closeModal(); }
 }
 
 function openManagementPanel() {
@@ -186,88 +169,66 @@ async function switchAdminTab(tab) {
     
     if (tab === 'tickets') {
         const { data } = await sbClient.from('support_tickets').select('*').order('created_at', { ascending: false });
-        view.innerHTML = `<h3>Тикети підтримки</h3>` + (data?.length ? data.map(t => `
-            <div style="border:1px solid #ccc; padding:15px; margin-bottom:10px; background:#fff; border-radius:8px;">
-                <b>${t.user_email}</b>
-                <div style="font-size:12px; color:#777; margin-bottom:5px;">${new Date(t.created_at).toLocaleString()}</div>
-                <p>${t.message}</p>
-            </div>`).join('') : "Тикетів немає");
+        view.innerHTML = `<h3>Тикети</h3>` + (data?.length ? data.map(t => `<div style="border:1px solid #ccc; padding:15px; margin-bottom:10px; background:#fff; border-radius:8px;"><b>${t.user_email}</b><p>${t.message}</p></div>`).join('') : "Порожньо");
     } else if (tab === 'add_game') {
         view.innerHTML = `
-            <h3>Додати нову гру</h3>
-            <input id="g-title" placeholder="Назва гри" style="width:100%; margin-bottom:10px; padding:12px; box-sizing: border-box;">
-            <input id="g-price" type="number" placeholder="Ціна (грн)" style="width:100%; margin-bottom:10px; padding:12px; box-sizing: border-box;">
-            <input id="g-img" placeholder="URL зображення" style="width:100%; margin-bottom:10px; padding:12px; box-sizing: border-box;">
+            <h3>Додати гру</h3>
+            <input id="g-title" placeholder="Назва" style="width:100%; margin-bottom:10px; padding:12px; box-sizing: border-box;">
+            <input id="g-price" type="number" placeholder="Ціна" style="width:100%; margin-bottom:10px; padding:12px; box-sizing: border-box;">
+            <input id="g-img" placeholder="URL картинки" style="width:100%; margin-bottom:10px; padding:12px; box-sizing: border-box;">
             <input id="g-author" placeholder="Розробник" style="width:100%; margin-bottom:10px; padding:12px; box-sizing: border-box;">
-            <input id="g-year" placeholder="Рік випуску" style="width:100%; margin-bottom:10px; padding:12px; box-sizing: border-box;">
-            <textarea id="g-specs" placeholder="Системні вимоги" style="width:100%; margin-bottom:10px; padding:12px; box-sizing: border-box; height: 80px;"></textarea>
-            <textarea id="g-desc" placeholder="Опис гри" style="width:100%; margin-bottom:10px; padding:12px; box-sizing: border-box; height: 80px;"></textarea>
+            <input id="g-year" placeholder="Рік" style="width:100%; margin-bottom:10px; padding:12px; box-sizing: border-box;">
+            <textarea id="g-specs" placeholder="Вимоги" style="width:100%; margin-bottom:10px; padding:12px; box-sizing: border-box; height: 80px;"></textarea>
+            <textarea id="g-desc" placeholder="Опис" style="width:100%; margin-bottom:10px; padding:12px; box-sizing: border-box; height: 80px;"></textarea>
             <select id="g-genre" style="width:100%; margin-bottom:15px; padding:12px; box-sizing: border-box;">
-                <option value="Action">Action</option>
-                <option value="RPG">RPG</option>
-                <option value="Shooter">Shooter</option>
-                <option value="Simulator">Simulator</option>
-                <option value="Strategy">Strategy</option>
+                <option value="Action">Action</option><option value="RPG">RPG</option><option value="Shooter">Shooter</option><option value="Simulator">Simulator</option><option value="Strategy">Strategy</option>
             </select>
-            <button onclick="saveNewGame()" style="width:100%; padding:15px; background:green; color:white; border:none; cursor:pointer; font-weight:bold; border-radius: 8px;">ОПУБЛІКУВАТИ</button>`;
+            <button onclick="saveNewGame()" style="width:100%; padding:15px; background:green; color:white; border:none; border-radius: 8px;">ОПУБЛІКУВАТИ</button>`;
     } else if (tab === 'all_orders') {
         const { data } = await sbClient.from('orders').select('*').order('created_at', { ascending: false });
-        view.innerHTML = `<h3>Історія замовлень</h3>` + (data?.length ? data.map(o => `
-            <div style="border-bottom:1px solid #ccc; padding:10px 0;">
-                <b>${o.user_email}</b><br>
-                <span style="color:#27ae60; font-weight:bold;">${o.total_price} грн</span><br>
-                <small>${o.items_names}</small>
-                <div style="font-size:10px; color:#999;">${new Date(o.created_at).toLocaleString()}</div>
-            </div>`).join('') : "Замовлень немає");
+        view.innerHTML = `<h3>Продажі</h3>` + (data?.length ? data.map(o => `<div style="border-bottom:1px solid #ccc; padding:10px 0;"><b>${o.user_email}</b>: ${o.total_price} грн<br><small>${o.items_names}</small></div>`).join('') : "Немає");
     } else if (tab === 'users') {
         view.innerHTML = `
-            <h3>Керування правами</h3>
-            <input id="u-email" placeholder="Email користувача" style="width:100%; margin-bottom:10px; padding:12px; box-sizing: border-box;">
+            <h3>Права</h3>
+            <input id="u-email" placeholder="Email" style="width:100%; margin-bottom:10px; padding:12px; box-sizing: border-box;">
             <select id="u-role" style="width:100%; margin-bottom:15px; padding:12px; box-sizing: border-box;">
-                <option value="moderator">Модератор</option>
-                <option value="admin">Адміністратор</option>
+                <option value="moderator">Модератор</option><option value="admin">Адміністратор</option>
             </select>
-            <button onclick="assignRole()" style="width:100%; padding:15px; background:#2980b9; color:white; border:none; cursor:pointer; font-weight:bold; border-radius: 8px;">ЗМІНИТИ ПРАВА</button>`;
+            <button onclick="assignRole()" style="width:100%; padding:15px; background:#2980b9; color:white; border:none; border-radius: 8px;">ЗМІНИТИ</button>`;
     }
 }
 
 async function saveNewGame() {
     const title = document.getElementById('g-title').value;
     const price = parseFloat(document.getElementById('g-price').value);
-    
-    if (!title || isNaN(price)) return alert("Назва та ціна обов'язкові!");
+    if (!title || isNaN(price)) return alert("Заповніть обов'язкові поля");
 
     const game = {
-        title: title,
-        price: price,
+        title, price,
         img: document.getElementById('g-img').value || 'https://via.placeholder.com/300x400',
         genre: document.getElementById('g-genre').value,
         author: document.getElementById('g-author').value || 'Невідомо',
         year: document.getElementById('g-year').value || '2024',
-        specs: document.getElementById('g-specs').value || 'Мінімальні вимоги не вказані',
+        specs: document.getElementById('g-specs').value || 'Не вказано',
         desc: document.getElementById('g-desc').value || 'Немає опису'
     };
 
     const { error } = await sbClient.from('games').insert([game]);
-    if (error) alert("Помилка при збереженні: " + error.message);
-    else { 
-        alert("Гру додано до магазину!"); 
-        location.reload(); 
-    }
+    if (error) alert(error.message);
+    else location.reload();
 }
 
 async function assignRole() {
     const email = document.getElementById('u-email').value;
     const role = document.getElementById('u-role').value;
     if (!email) return alert("Введіть email");
-
-    const { error } = await sbClient.from('admin_status').upsert([{ user_email: email, role: role }], { onConflict: 'user_email' });
+    const { error } = await sbClient.from('admin_status').upsert([{ user_email: email, role }], { onConflict: 'user_email' });
     if (error) alert(error.message);
-    else alert("Роль успішно оновлено для " + email);
+    else alert("Оновлено");
 }
 
 function addToCartDirect(title, price, img) {
-    if (cart.some(i => i.title === title)) return alert("Ця гра вже у кошику!");
+    if (cart.some(i => i.title === title)) return alert("Вже у кошику");
     cart.push({ title, price, img });
     saveCart();
     closeModal();
@@ -277,12 +238,8 @@ function addToCartDirect(title, price, img) {
 function addToCart(btn) {
     const c = btn.closest('.game-card');
     if (!c) return;
-    const g = { 
-        title: c.dataset.title, 
-        price: parseFloat(c.dataset.price), 
-        img: c.dataset.img 
-    };
-    if (cart.some(i => i.title === g.title)) return alert("Ця гра вже у кошику!");
+    const g = { title: c.dataset.title, price: parseFloat(c.dataset.price), img: c.dataset.img };
+    if (cart.some(i => i.title === g.title)) return alert("Вже у кошику");
     cart.push(g);
     saveCart();
     toggleCart();
@@ -297,25 +254,23 @@ function renderCart() {
     const count = document.getElementById('cart-count');
     const items = document.getElementById('cart-items');
     const total = document.getElementById('cart-total');
-    
     if (count) count.innerText = cart.length;
-    
     let sum = 0;
     if (items) {
         items.innerHTML = cart.length ? cart.map((item, i) => {
             sum += item.price;
             return `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; color:black; background:#fff; padding:12px; border-radius:12px; border:1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; color:black; background:#fff; padding:12px; border-radius:12px; border:1px solid #ddd;">
                     <div style="display:flex; align-items:center; gap:15px;">
-                        <img src="${item.img}" style="width:60px; height:60px; border-radius:8px; object-fit:cover; flex-shrink:0;">
+                        <img src="${item.img}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;">
                         <div>
-                            <div style="font-size:15px; font-weight:bold; color:#222;">${item.title}</div>
-                            <div style="font-size:14px; color:#d4af37; font-weight:bold;">${item.price} грн</div>
+                            <div style="font-size:15px; font-weight:bold;">${item.title}</div>
+                            <div style="font-size:14px; color:#d4af37;">${item.price} грн</div>
                         </div>
                     </div>
-                    <span onclick="removeFromCart(${i})" style="color:#ff4444; cursor:pointer; font-size:28px; padding:5px; font-weight:bold;">&times;</span>
+                    <span onclick="removeFromCart(${i})" style="color:#ff4444; cursor:pointer; font-size:28px;">&times;</span>
                 </div>`;
-        }).join('') : '<div style="text-align:center; color:#888; margin-top:40px; font-size:18px;">Ваш кошик порожній</div>';
+        }).join('') : '<div style="text-align:center; color:#888; margin-top:40px;">Кошик порожній</div>';
     }
     if (total) total.innerText = sum.toFixed(2);
 }
@@ -326,15 +281,8 @@ function removeFromCart(i) {
 }
 
 async function checkout() {
-    if (!currentUser) {
-        closeModal();
-        toggleAuthModal();
-        return;
-    }
-    if (!cart.length) {
-        alert("Кошик порожній!");
-        return;
-    }
+    if (!currentUser) { closeModal(); toggleAuthModal(); return; }
+    if (!cart.length) return alert("Кошик порожній");
     
     const totalPrice = cart.reduce((s, i) => s + i.price, 0);
     const itemsNames = cart.map(i => i.title).join(', ');
@@ -349,9 +297,7 @@ async function checkout() {
         cart = [];
         saveCart();
         window.location.href = CONFIG.DONATE_URL;
-    } else {
-        alert("Помилка оформлення: " + error.message);
-    }
+    } else alert(error.message);
 }
 
 function openDetails(btn) {
@@ -363,17 +309,17 @@ function openDetails(btn) {
     modalData.innerHTML = `
         <div style="display:flex; flex-wrap:wrap; background:white; border-radius:15px; overflow:hidden; width: 100%; max-width: 900px;">
             <div style="flex:1; min-width:300px;"><img src="${d.img}" style="width:100%; height:100%; object-fit:cover;"></div>
-            <div style="flex:1.2; padding:35px; color:black; min-width:300px; box-sizing: border-box; position:relative;">
+            <div style="flex:1.2; padding:35px; color:black; min-width:300px; position:relative;">
                 <span class="close-btn-large" onclick="closeModal()" style="position:absolute; right:20px; top:10px; font-size:35px; cursor:pointer;">&times;</span>
-                <h2 style="margin-top:0; font-size:32px; color:#111;">${d.title}</h2>
+                <h2 style="margin-top:0;">${d.title}</h2>
                 <div style="font-size:28px; color:#d4af37; font-weight:bold; margin-bottom:20px;">${d.price} грн</div>
-                <p style="margin-bottom:25px; color:#444; line-height:1.7; font-size:16px;">${d.desc}</p>
-                <div style="background:#f9f9f9; padding:20px; border-radius:12px; margin-bottom:25px; font-size:14px; color:#333; border-left: 5px solid #d4af37;">
-                    <div style="margin-bottom:8px;"><b>РОЗРОБНИК:</b> ${d.author}</div>
-                    <div style="margin-bottom:8px;"><b>РІК ВИПУСКУ:</b> ${d.year}</div>
-                    <div style="line-height:1.4;"><b>СИСТЕМНІ ВИМОГИ:</b><br>${d.specs}</div>
+                <p style="margin-bottom:25px; color:#444;">${d.desc}</p>
+                <div style="background:#f9f9f9; padding:20px; border-radius:12px; margin-bottom:25px; font-size:14px;">
+                    <div><b>РОЗРОБНИК:</b> ${d.author}</div>
+                    <div><b>РІК:</b> ${d.year}</div>
+                    <div><b>ВИМОГИ:</b><br>${d.specs}</div>
                 </div>
-                <button style="width:100%; padding:20px; background:#4a3427; color:white; border:none; cursor:pointer; font-weight:bold; border-radius:12px; font-size:18px; transition: 0.3s;" onclick="addToCartDirect('${d.title.replace(/'/g, "\\'")}', ${d.price}, '${d.img}')">ДОДАТИ В КОШИК</button>
+                <button style="width:100%; padding:20px; background:#4a3427; color:white; border:none; cursor:pointer; font-weight:bold; border-radius:12px;" onclick="addToCartDirect('${d.title.replace(/'/g, "\\'")}', ${d.price}, '${d.img}')">В КОШИК</button>
             </div>
         </div>
     `;
@@ -381,15 +327,6 @@ function openDetails(btn) {
 }
 
 function initFilters() {
-    const filterContainer = document.querySelector('.filters');
-    if (filterContainer) {
-        filterContainer.style.display = "flex";
-        filterContainer.style.flexWrap = "wrap";
-        filterContainer.style.alignItems = "center";
-        filterContainer.style.gap = "10px";
-        filterContainer.style.marginBottom = "20px";
-        filterContainer.style.padding = "10px 0";
-    }
     document.querySelectorAll('.filter-btn').forEach(btn => {
         if(!btn.dataset.genre) return;
         btn.onclick = () => {
@@ -400,92 +337,53 @@ function initFilters() {
     });
 }
 
-function injectSortAndFavorites() {
+function injectFavoritesOnly() {
     const filterRow = document.querySelector('.filters');
     if (!filterRow) return;
-
-    const oldGroup = document.getElementById('fav-sort-group');
-    if (oldGroup) oldGroup.remove();
+    const old = document.getElementById('fav-group');
+    if (old) old.remove();
 
     const group = document.createElement('div');
-    group.id = 'fav-sort-group';
-    group.style.display = 'flex';
-    group.style.alignItems = 'center';
-    group.style.gap = '10px';
+    group.id = 'fav-group';
     group.style.marginLeft = 'auto';
-
     group.innerHTML = `
-        <button id="favorites-trigger" onclick="toggleFavView()" style="padding:10px 15px; border-radius:10px; border:1px solid #ddd; background:white; color:#222; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:8px; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-            <span style="font-size:18px;">⭐</span>
-            <span>ОБРАНЕ</span>
-            <span id="fav-count" style="background:#f1c40f; color:black; padding:2px 8px; border-radius:15px; font-size:12px;">${favorites.length}</span>
+        <button id="favorites-trigger" onclick="toggleFavView()" style="padding:10px 15px; border-radius:10px; border:1px solid #ddd; background:white; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:8px;">
+            <span>⭐ ОБРАНЕ</span>
+            <span id="fav-count" style="background:#f1c40f; padding:2px 8px; border-radius:15px;">${favorites.length}</span>
         </button>
-        <select id="main-sort-select" onchange="sortGames(this.value)" style="padding:10px 15px; border-radius:10px; border:1px solid #ddd; background:white; color:#222; font-weight:bold; cursor:pointer; outline:none; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-            <option value="rating">СОРТУВАННЯ</option>
-            <option value="cheap">ЦІНА: НИЗЬКА</option>
-            <option value="expensive">ЦІНА: ВИСОКА</option>
-            <option value="new">СПОЧАТКУ НОВІ</option>
-        </select>
     `;
     filterRow.appendChild(group);
 }
 
 function applyGlobalFilters() {
     const activeGenre = document.querySelector('.filter-btn.active')?.dataset.genre || 'all';
-    const favTrigger = document.getElementById('favorites-trigger');
-    const isFavOnly = favTrigger ? favTrigger.classList.contains('active') : false;
+    const isFavOnly = document.getElementById('favorites-trigger')?.classList.contains('active');
     
     document.querySelectorAll('.game-card').forEach(card => {
-        const matchesGenre = activeGenre === 'all' || card.dataset.genre === activeGenre;
-        const matchesFav = !isFavOnly || favorites.includes(card.dataset.title);
-        card.style.display = (matchesGenre && matchesFav) ? 'block' : 'none';
+        const mG = activeGenre === 'all' || card.dataset.genre === activeGenre;
+        const mF = !isFavOnly || favorites.includes(card.dataset.title);
+        card.style.display = (mG && mF) ? 'block' : 'none';
     });
 }
 
 function toggleFavView() {
     const btn = document.getElementById('favorites-trigger');
     if (!btn) return;
-    
-    const isActive = btn.classList.toggle('active');
-    btn.style.background = isActive ? '#f1c40f' : 'white';
-    btn.style.borderColor = isActive ? '#f1c40f' : '#ddd';
-    
+    const act = btn.classList.toggle('active');
+    btn.style.background = act ? '#f1c40f' : 'white';
     applyGlobalFilters();
 }
 
-function sortGames(criteria) {
-    const container = document.querySelector('.games-grid') || document.querySelector('.catalog-grid');
-    if (!container) return;
-    const cards = Array.from(container.querySelectorAll('.game-card'));
-    
-    cards.sort((a, b) => {
-        const pA = parseFloat(a.dataset.price);
-        const pB = parseFloat(b.dataset.price);
-        const yA = parseInt(a.dataset.year) || 0;
-        const yB = parseInt(b.dataset.year) || 0;
-
-        if (criteria === 'cheap') return pA - pB;
-        if (criteria === 'expensive') return pB - pA;
-        return yB - yA;
-    });
-
-    cards.forEach(card => container.appendChild(card));
-}
-
 function attachHeartsToCards() {
-    const cards = document.querySelectorAll('.game-card');
-    cards.forEach(card => {
+    document.querySelectorAll('.game-card').forEach(card => {
         if (card.querySelector('.heart-btn')) return;
         const title = card.dataset.title;
         const isFav = favorites.includes(title);
         const heart = document.createElement('div');
         heart.className = 'heart-btn';
         heart.innerHTML = '❤';
-        heart.style.cssText = `position:absolute; top:10px; right:10px; font-size:24px; cursor:pointer; z-index:10; transition:0.3s; color:${isFav ? '#f1c40f' : '#ccc'}; text-shadow: 0 0 5px rgba(0,0,0,0.2);`;
-        heart.onclick = (e) => {
-            e.stopPropagation();
-            toggleHeart(title, heart);
-        };
+        heart.style.cssText = `position:absolute; top:10px; right:10px; font-size:24px; cursor:pointer; z-index:10; color:${isFav ? '#f1c40f' : '#ccc'};`;
+        heart.onclick = (e) => { e.stopPropagation(); toggleHeart(title, heart); };
         card.style.position = 'relative';
         card.appendChild(heart);
     });
@@ -506,51 +404,23 @@ function toggleHeart(title, el) {
 }
 
 function openMainModal() {
-    const m = document.getElementById('details-modal');
-    const o = document.getElementById('overlay');
-    if (m && o) {
-        m.classList.add('active');
-        o.classList.add('active');
-        m.style.zIndex = "10005";
-        o.style.zIndex = "10004";
-    }
+    const m = document.getElementById('details-modal'), o = document.getElementById('overlay');
+    if (m && o) { m.classList.add('active'); o.classList.add('active'); }
 }
 
 function closeModal() {
     document.querySelectorAll('.modal, .sidebar').forEach(m => m.classList.remove('active'));
-    const am = document.getElementById('auth-modal');
+    const am = document.getElementById('auth-modal'), o = document.getElementById('overlay');
     if (am) am.style.display = 'none';
-    const o = document.getElementById('overlay');
-    if (o) {
-        o.classList.remove('active');
-        o.style.zIndex = "";
-    }
+    if (o) o.classList.remove('active');
 }
 
 function toggleCart() {
-    const s = document.getElementById('cart-sidebar');
-    const o = document.getElementById('overlay');
-    if (!s || !o) return;
-    
-    if (s.classList.contains('active')) {
-        s.classList.remove('active');
-        o.classList.remove('active');
-        o.style.zIndex = "";
-    } else {
-        s.classList.add('active');
-        o.classList.add('active');
-        s.style.zIndex = "10006";
-        o.style.zIndex = "10005";
-    }
+    const s = document.getElementById('cart-sidebar'), o = document.getElementById('overlay');
+    if (s && o) { s.classList.toggle('active'); o.classList.toggle('active'); }
 }
 
 function toggleAuthModal() {
-    const m = document.getElementById('auth-modal');
-    const o = document.getElementById('overlay');
-    if (m && o) {
-        m.style.display = 'block';
-        m.style.zIndex = "10007"; 
-        o.style.zIndex = "10006";
-        o.classList.add('active');
-    }
+    const m = document.getElementById('auth-modal'), o = document.getElementById('overlay');
+    if (m && o) { m.style.display = 'block'; o.classList.add('active'); }
 }
