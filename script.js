@@ -102,8 +102,7 @@ function sortGames(criteria) {
     const container = document.querySelector('.games-grid') || document.querySelector('.catalog-grid');
     if (!container) return;
 
-    const cards = Array.from(container.querySelectorAll('.game-card'));
-    if (cards.length === 0) return;
+    const cards = Array.from(container.children);
 
     cards.sort((a, b) => {
         const priceA = parseFloat(a.dataset.price) || 0;
@@ -117,6 +116,7 @@ function sortGames(criteria) {
         return 0;
     });
 
+    container.innerHTML = '';
     cards.forEach(card => container.appendChild(card));
 }
 
