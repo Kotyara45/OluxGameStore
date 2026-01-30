@@ -31,17 +31,6 @@ window.onload = async function() {
 
         setupGlobalListeners();
 
-        const sortSelect = document.getElementById('sort-select');
-        if (sortSelect) {
-            console.log('Sort select found');
-            sortSelect.addEventListener('change', (e) => {
-                console.log('Sorting changed to:', e.target.value);
-                sortGames(e.target.value);
-            });
-        } else {
-            console.warn('Sort select element NOT found (id="sort-select")');
-        }
-
         await updateAuthUI();
         renderCart();
         initFilters();
@@ -173,56 +162,6 @@ async function updateAuthUI() {
         }
     }
     attachHeartsToCards();
-}
-
-function getPrice(card) {
-    let p = card.getAttribute('data-price');
-    if (!p) {
-        const text = card.innerText || "";
-        const match = text.match(/(\d+([.,]\d+)?)/);
-        if (match) p = match[0].replace(',', '.');
-    }
-    return parseFloat(p) || 0;
-}
-
-function getYear(card) {
-    let y = card.getAttribute('data-year');
-    if (!y) {
-         const text = card.innerText || "";
-         const match = text.match(/20\d{2}/); 
-         if (match) y = match[0];
-    }
-    return parseInt(y) || 0;
-}
-
-function sortGames(criteria) {
-    const container = document.querySelector('.games-grid') || document.querySelector('.catalog-grid');
-    if (!container) {
-        console.error('Container .games-grid or .catalog-grid not found');
-        return;
-    }
-
-    const cards = Array.from(container.children).filter(c => c.classList.contains('game-card'));
-    if (cards.length === 0) {
-        console.warn('No .game-card elements found inside container');
-        return;
-    }
-
-    cards.sort((a, b) => {
-        const pA = getPrice(a);
-        const pB = getPrice(b);
-        const yA = getYear(a);
-        const yB = getYear(b);
-
-        if (criteria === 'cheap') return pA - pB;
-        if (criteria === 'expensive') return pB - pA;
-        if (criteria === 'new') return yB - yA;
-        return 0;
-    });
-
-    container.innerHTML = '';
-    cards.forEach(card => container.appendChild(card));
-    console.log(`Sorted ${cards.length} cards by ${criteria}`);
 }
 
 async function signIn() {
