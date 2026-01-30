@@ -14,7 +14,6 @@ let favorites = JSON.parse(localStorage.getItem('olux_favs')) || [];
 window.onload = async function() {
     try {
         if (typeof supabase === 'undefined') return;
-
         sbClient = supabase.createClient(CONFIG.SB_URL, CONFIG.SB_KEY);
         
         const { data: { session } } = await sbClient.auth.getSession();
@@ -61,15 +60,13 @@ async function updateAuthUI() {
         if (adminBtn) adminBtn.style.display = 'none';
         if (supportBtn) supportBtn.style.display = 'none';
         if (favWrapper) favWrapper.style.display = 'none';
-        // Примусово ховаємо серця на картках, якщо юзер вийшов
-        document.querySelectorAll('.heart-btn').forEach(h => h.style.display = 'none');
+        document.querySelectorAll('.heart-btn').forEach(h => h.remove());
         return;
     }
 
     if (authSect) authSect.style.display = 'none';
     if (logoutBtn) logoutBtn.style.display = 'block';
     if (favWrapper) favWrapper.style.display = 'block';
-    document.querySelectorAll('.heart-btn').forEach(h => h.style.display = 'block');
 
     userRole = 'user';
     if (currentUser.email === CONFIG.OWNER_EMAIL) {
@@ -98,26 +95,28 @@ async function updateAuthUI() {
             adminBtn.onclick = openManagementPanel;
         }
     }
+    attachHeartsToCards();
 }
 
 function sortGames(criteria) {
     const container = document.querySelector('.games-grid') || document.querySelector('.catalog-grid');
     if (!container) return;
 
-    const cards = Array.from(container.querySelectorAll('.game-card'));
+    const cards = Array.from(container.children);
 
     cards.sort((a, b) => {
-        const priceA = parseFloat(a.dataset.price) || 0;
-        const priceB = parseFloat(b.dataset.price) || 0;
-        const yearA = parseInt(a.dataset.year) || 0;
-        const yearB = parseInt(b.dataset.year) || 0;
+        const valA = parseFloat(a.getAttribute('data-price')) || 0;
+        const valB = parseFloat(b.getAttribute('data-price')) || 0;
+        const yearA = parseInt(a.getAttribute('data-year')) || 0;
+        const yearB = parseInt(b.getAttribute('data-year')) || 0;
 
-        if (criteria === 'cheap') return priceA - priceB;
-        if (criteria === 'expensive') return priceB - priceA;
+        if (criteria === 'cheap') return valA - valB;
+        if (criteria === 'expensive') return valB - valA;
         if (criteria === 'new') return yearB - yearA;
         return 0;
     });
 
+    container.innerHTML = '';
     cards.forEach(card => container.appendChild(card));
 }
 
@@ -355,7 +354,6 @@ function openDetails(btn) {
 
 function initFilters() {
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        if(!btn.dataset.genre) return;
         btn.onclick = () => {
             document.querySelector('.filter-btn.active')?.classList.remove('active');
             btn.classList.add('active');
@@ -366,8 +364,7 @@ function initFilters() {
 
 function applyGlobalFilters() {
     const activeGenre = document.querySelector('.filter-btn.active')?.dataset.genre || 'all';
-    const trigger = document.getElementById('favorites-trigger');
-    const isFavOnly = trigger ? trigger.classList.contains('active') : false;
+    const isFavOnly = document.getElementById('favorites-trigger')?.classList.contains('active');
     
     document.querySelectorAll('.game-card').forEach(card => {
         const mG = activeGenre === 'all' || card.dataset.genre === activeGenre;
@@ -385,18 +382,15 @@ function toggleFavView() {
 }
 
 function attachHeartsToCards() {
+    if (!currentUser) return;
     document.querySelectorAll('.game-card').forEach(card => {
-        if (card.querySelector('.heart-btn')) {
-            const h = card.querySelector('.heart-btn');
-            h.style.display = currentUser ? 'block' : 'none';
-            return;
-        }
+        if (card.querySelector('.heart-btn')) return;
         const title = card.dataset.title;
         const isFav = favorites.includes(title);
         const heart = document.createElement('div');
         heart.className = 'heart-btn';
         heart.innerHTML = '❤';
-        heart.style.cssText = `position:absolute; top:10px; right:10px; font-size:24px; cursor:pointer; z-index:10; color:${isFav ? '#f1c40f' : '#ccc'}; display:${currentUser ? 'block' : 'none'};`;
+        heart.style.cssText = `position:absolute; top:10px; right:10px; font-size:24px; cursor:pointer; z-index:10; color:${isFav ? '#f1c40f' : '#ccc'};`;
         heart.onclick = (e) => { e.stopPropagation(); toggleHeart(title, heart); };
         card.style.position = 'relative';
         card.appendChild(heart);
@@ -404,7 +398,6 @@ function attachHeartsToCards() {
 }
 
 function toggleHeart(title, el) {
-    if (!currentUser) return;
     if (favorites.includes(title)) {
         favorites = favorites.filter(t => t !== title);
         el.style.color = '#ccc';
